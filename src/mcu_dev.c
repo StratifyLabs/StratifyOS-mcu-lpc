@@ -18,7 +18,10 @@
 #include "lpc_local.h"
 
 const mcu_config_t mcu_config = {
-		.irq_total = DEV_LAST_IRQ,
-		.irq_middle_prio = DEV_MIDDLE_PRIORITY,
+		.irq_total = MCU_LAST_IRQ,
+		.irq_middle_prio = MCU_MIDDLE_IRQ_PRIORITY,
 		.usb_logical_endpoint_count = DEV_USB_LOGICAL_ENDPOINT_COUNT
 };
+
+u32 mcu_ram_usage_table[MCU_RAM_PAGES/2] MCU_SYS_MEM;
+

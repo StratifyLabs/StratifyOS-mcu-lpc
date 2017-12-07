@@ -120,7 +120,7 @@ int mcu_wdt_setinterval(int interval){
 	return 0;
 }
 
-void mcu_wdt_priv_reset(void * args){
+void mcu_wdt_root_reset(void * args){
 	LPC_WDT->FEED = 0xAA;
 	LPC_WDT->FEED = 0x55;
 }

@@ -196,8 +196,8 @@ typedef struct MCU_PACK {
 #define MEM_MAX_FLASH_WRITE_SIZE 1024
 
 
-#define DEV_LAST_IRQ QEI_IRQn
-#define DEV_MIDDLE_PRIORITY 16
+#define MCU_LAST_IRQ QEI_IRQn
+#define MCU_MIDDLE_IRQ_PRIORITY 16
 #define DEV_USB_LOGICAL_ENDPOINT_COUNT 16
 #define IAP_ADDRESS 0x1FFF1FF1
 #define MCU_CORE_BOOTLOADER_LOC 0x10002000
@@ -267,6 +267,6 @@ typedef struct                          /* Channel Registers                  */
 
 #include "mcu_lpc_dma.h"
 
-
+#define MCU_RAM_PAGES 112
 
 #endif /* MCU_ARCH_MCU_LPC43XX_H_ */

@@ -68,8 +68,8 @@ int mcu_lpc_flash_get_serialno(uint32_t * dest);
 
 #include "cmsis/LPC17xx.h"
 
-#define DEV_LAST_IRQ SW7_IRQn
-#define DEV_MIDDLE_PRIORITY 16
+#define MCU_LAST_IRQ SW7_IRQn
+#define MCU_MIDDLE_IRQ_PRIORITY 16
 
 #ifdef __cplusplus
 }
@@ -162,7 +162,7 @@ int mcu_lpc_flash_get_serialno(uint32_t * dest);
 #define MCU_START_OF_SRAM 0x10000000
 #define MCU_START_OF_AHB_SRAM 0x2007C000
 
-#define DEVICE_RAM_PAGES 60
+#define MCU_RAM_PAGES 60
 
 
 //Pin mapping differences between 17xx and 177x_8x

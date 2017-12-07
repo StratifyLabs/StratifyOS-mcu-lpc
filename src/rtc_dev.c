@@ -72,7 +72,6 @@ void mcu_rtc_dev_power_off(const devfs_handle_t * handle){
 	//LPC_RTC_Type * regs = rtc_regs[port];
 	if ( rtc_local.ref_count > 0 ){
 		if ( rtc_local.ref_count == 1 ){
-			//core_priv_disable_irq((void*)RTC_IRQn);
 			//regs->CCR = 0;
 		}
 		rtc_local.ref_count--;

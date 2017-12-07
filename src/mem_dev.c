@@ -21,6 +21,7 @@
 #include <mcu/bootloader.h>
 #include "lpc_local.h"
 
+#define MCU_RAM_PAGE_SIZE 1024
 
 extern u32 _text;
 extern u32 _etext;
