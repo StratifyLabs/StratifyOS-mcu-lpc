@@ -18,8 +18,8 @@
  */
 
 #include <mcu/usb.h>
-#include <mcu/boot_debug.h>
 
+#include <mcu/boot_debug.h>
 #include "lpc_local.h"
 #include "usb_flags.h"
 
@@ -270,7 +270,6 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 
-
 	if ( (log_ep < DEV_USB_LOGICAL_ENDPOINT_COUNT)  ){
 		if( action->o_events & MCU_EVENT_FLAG_DATA_READY ){
 			//cortexm_enable_interrupts(NULL);
@@ -515,12 +514,11 @@ int mcu_usb_root_write_endpoint(const devfs_handle_t * handle, u32 endpoint_num,
 }
 
 
-/*! \details This function services the USB interrupt request.
- */
 void mcu_core_usb0_isr(){
 	u32 device_interrupt_status;
 	u32 tmp;
 	int i;
+
 
 	device_interrupt_status = LPC_USB->DevIntSt;     //Device interrupt status
 	if (device_interrupt_status & ERR_INT){ //Error interrupt

@@ -29,12 +29,10 @@ const bootloader_api_t mcu_core_bootloader_api = {
 		.code_size = 0,
 };
 
-
 void mcu_core_hardware_id() MCU_ALIAS(mcu_core_default_isr);
 
 void mcu_core_reset_handler() __attribute__ ((section(".reset_vector")));
 void mcu_core_nmi_isr() MCU_WEAK;
-int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr) MCU_WEAK;
 
 void mcu_core_hardfault_handler() MCU_WEAK;
 void mcu_core_memfault_handler() MCU_WEAK;
@@ -436,11 +434,6 @@ void mcu_core_os_handler(){
 void mcu_core_default_isr(){
 	mcu_board_execute_event_handler(MCU_BOARD_CONFIG_EVENT_ROOT_FATAL, "default isr");
 }
-
-int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr){
-	return 0;
-}
-
 
 
 
