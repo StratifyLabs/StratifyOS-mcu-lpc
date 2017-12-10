@@ -63,6 +63,7 @@ int mcu_mem_dev_is_powered(const devfs_handle_t * handle){
 }
 
 int mcu_mem_getsyspage(){
+	//this returns the page where the system memory is stored -- for LPC it is the page after SRAM (AHB SRAM)
 	return (SRAM_PAGES);
 }
 
