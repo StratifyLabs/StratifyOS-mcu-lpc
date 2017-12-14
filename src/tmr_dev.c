@@ -134,7 +134,6 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 	}
 
 	u32 o_flags = attr->o_flags;
-	int chan = attr->channel.loc;
 	regs = tmr_regs_table[port];
 
 
@@ -156,15 +155,6 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 				}
 			}
 
-			if( mcu_set_pin_assignment(
-					&(attr->pin_assignment),
-					MCU_CONFIG_PIN_ASSIGNMENT(tmr_config_t, handle),
-					MCU_PIN_ASSIGNMENT_COUNT(tmr_pin_assignment_t),
-					CORE_PERIPH_TMR, port, 0, 0) < 0 ){
-				return -1;
-			}
-
-
 			if( o_flags & TMR_FLAG_IS_SOURCE_IC1 ){
 				ctcr |= (1<<2);
 			}
@@ -178,7 +168,6 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 			} else {
 				regs->PR = 0;
 			}
-
 			regs->CTCR = ctcr;
 		}
 
@@ -186,6 +175,8 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 
 
 	if( o_flags & TMR_FLAG_SET_CHANNEL ){
+		u32 chan = attr->channel.loc & ~MCU_CHANNEL_FLAG_IS_INPUT;
+
 		//Check for reset action
 		if ( o_flags & TMR_FLAG_IS_CHANNEL_RESET_ON_MATCH){ //reset on match
 			regs->MCR |= ((1<<1) << (chan*3) );
@@ -196,22 +187,40 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 			regs->MCR |= ((1<<2) << (chan*3) );
 		}
 
-		if( chan <= TMR_ACTION_CHANNEL_OC3 ){
-			regs->EMR &= ~(0x3<<(chan+4));
-			if( o_flags & TMR_FLAG_IS_CHANNEL_SET_OUTPUT_ON_MATCH ){
-				//set OC output on event
-				regs->EMR |= (0x2<<(chan+4));
-			}
+		if( (attr->channel.loc & MCU_CHANNEL_FLAG_IS_INPUT) == 0 ){
+			//for output channels only -- check for output configuration
+			if( chan <= TMR_ACTION_CHANNEL_OC3 ){
+				regs->EMR &= ~(0x3<<(chan*2+4));
+				if( o_flags & TMR_FLAG_IS_CHANNEL_SET_OUTPUT_ON_MATCH ){
+					//set OC output on event
+					regs->EMR |= (0x2<<(chan*2+4));
+				}
 
-			if( o_flags & TMR_FLAG_IS_CHANNEL_CLEAR_OUTPUT_ON_MATCH ){
-				//clr OC output on event
-				regs->EMR |= (0x1<<(chan+4));
-			}
+				if( o_flags & TMR_FLAG_IS_CHANNEL_CLEAR_OUTPUT_ON_MATCH ){
+					//clr OC output on event
+					regs->EMR |= (0x1<<(chan*2+4));
+				}
 
-			if( o_flags & TMR_FLAG_IS_CHANNEL_TOGGLE_OUTPUT_ON_MATCH ){
-				//toggle OC output on event
-				regs->EMR |= (0x3<<(chan+4));
+				if( o_flags & TMR_FLAG_IS_CHANNEL_TOGGLE_OUTPUT_ON_MATCH ){
+					//toggle OC output on event
+					regs->EMR |= (0x3<<(chan*2+4));
+				}
 			}
+		}
+
+		if( mcu_tmr_setchannel(handle, (void*)&attr->channel) < 0 ){
+			return -1;
+		}
+	}
+
+	if( o_flags & (TMR_FLAG_SET_CHANNEL|TMR_FLAG_SET_CHANNEL) ){
+		//if any pin assignment values are non 0xff -- set them to use the
+		if( mcu_set_pin_assignment(
+				&(attr->pin_assignment),
+				MCU_CONFIG_PIN_ASSIGNMENT(tmr_config_t, handle),
+				MCU_PIN_ASSIGNMENT_COUNT(tmr_pin_assignment_t),
+				CORE_PERIPH_TMR, port, 0, 0) < 0 ){
+			return -1;
 		}
 	}
 
@@ -251,7 +260,7 @@ int mcu_tmr_setchannel(const devfs_handle_t * handle, void * ctl){
 #if MCU_TMR_API == 1
 		regs->CR[chan] = req->value;
 #else
-		((uint32_t*)&(regs->CR0))[ chan ] = req->value;
+		((u32*)&(regs->CR0))[ chan ] = req->value;
 #endif
 
 	} else {
@@ -264,7 +273,7 @@ int mcu_tmr_setchannel(const devfs_handle_t * handle, void * ctl){
 #if MCU_TMR_API == 1
 		regs->MR[req->loc] = req->value;
 #else
-		((uint32_t*)&(regs->MR0))[ req->loc ] = req->value;
+		((u32*)&(regs->MR0))[ req->loc ] = req->value;
 #endif
 	}
 	return 0;
@@ -287,7 +296,7 @@ int mcu_tmr_getchannel(const devfs_handle_t * handle, void * ctl){
 #if MCU_TMR_API == 1
 		req->value = regs->CR[chan];
 #else
-		req->value = ((uint32_t*)&(regs->CR0))[ chan ];
+		req->value = ((u32*)&(regs->CR0))[ chan ];
 #endif
 	} else {
 		if ( req->loc > 3 ){
@@ -297,7 +306,7 @@ int mcu_tmr_getchannel(const devfs_handle_t * handle, void * ctl){
 #if MCU_TMR_API == 1
 		req->value = regs->MR[req->loc];
 #else
-		req->value = ((uint32_t*)&(regs->MR0))[ req->loc ];
+		req->value = ((u32*)&(regs->MR0))[ req->loc ];
 #endif
 	}
 	return 0;
@@ -346,7 +355,7 @@ int mcu_tmr_set(const devfs_handle_t * handle, void * ctl){
 	LPC_TIM_Type * regs;
 	int port = handle->port;
 	regs = tmr_regs_table[port];
-	regs->TC = (uint32_t)ctl;
+	regs->TC = (u32)ctl;
 	return 0;
 }
 
