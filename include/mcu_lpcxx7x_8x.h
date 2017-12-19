@@ -122,7 +122,7 @@ typedef struct MCU_PACK {
 #define MCU_START_OF_SRAM 0x10000000
 #define MCU_START_OF_AHB_SRAM 0x20000000
 
-#define MCU_RAM_PAGES 64
+#define MCU_RAM_PAGES 88
 
 /*! \brief This is the minimum flash write size. */
 #define FLASH_MIN_WRITE_SIZE 256

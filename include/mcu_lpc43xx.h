@@ -267,6 +267,6 @@ typedef struct                          /* Channel Registers                  */
 
 #include "mcu_lpc_dma.h"
 
-#define MCU_RAM_PAGES 112
+#define MCU_RAM_PAGES 88
 
 #endif /* MCU_ARCH_MCU_LPC43XX_H_ */

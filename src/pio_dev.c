@@ -25,7 +25,7 @@
 
 typedef struct {
 	mcu_event_handler_t handler;
-	uint8_t ref_count;
+	u8 ref_count;
 } pio_local_t;
 
 static pio_local_t m_pio0_local MCU_SYS_MEM;
@@ -367,8 +367,9 @@ void exec_cancelled2(){
 //On __lpc17xx The pio interrupts use the eint3 interrupt service routine -- this function should be called from there
 void mcu_core_pio0_isr(){
 	pio_event_data_t ev;
+	u32 status = LPC_GPIOINT->IntStatus;
 
-	if ( LPC_GPIOINT->IntStatus & (1<<0) ){
+	if ( status & (1<<0) ){
 		ev.status = 0;
 		ev.rising = LPC_GPIOINT->IO0IntStatR;
 		ev.falling = LPC_GPIOINT->IO0IntStatF;
@@ -376,7 +377,7 @@ void mcu_core_pio0_isr(){
 		mcu_execute_event_handler(&(m_pio0_local.handler), MCU_EVENT_FLAG_RISING | MCU_EVENT_FLAG_FALLING, &ev);
 	}
 
-	if ( LPC_GPIOINT->IntStatus & (1<<2) ){
+	if ( status & (1<<2) ){
 		ev.status = 0;
 		ev.rising = LPC_GPIOINT->IO2IntStatR;
 		ev.falling = LPC_GPIOINT->IO2IntStatF;
