@@ -84,11 +84,14 @@ int mcu_wdt_init(int mode, int interval){
 }
 
 int mcu_wdt_setinterval(int interval){
-	uint32_t counts;
+	u32 counts;
 
 #ifdef LPCXX7X_8X
 	//WDT oscillator is 500KHz with a 4 count pre-divider
 	counts = interval*500/4;
+	if( counts > 0x00ffffff ){
+		counts = 0x00ffffff;
+	}
 #else
 	int clk_src;
 
@@ -113,7 +116,7 @@ int mcu_wdt_setinterval(int interval){
 #endif
 
 	//Set the interval
-	LPC_WDT->TC = (uint32_t)counts;
+	LPC_WDT->TC = (u32)counts;
 
 	mcu_wdt_reset();
 
@@ -128,6 +131,17 @@ void mcu_wdt_root_reset(void * args){
 void mcu_wdt_reset(){
 	LPC_WDT->FEED = 0xAA;
 	LPC_WDT->FEED = 0x55;
+}
+
+void mcu_core_wdt_isr(){
+	register void * handler_stack;
+	asm volatile ("MRS %0, msp\n\t" : "=r" (handler_stack) );
+
+	LPC_WDT->MOD |= WDINT; //clear the interrupt
+	LPC_WDT->FEED = 0xAA;
+	LPC_WDT->FEED = 0x55;
+
+	cortexm_wdtfault_handler(handler_stack);
 }
 
 
