@@ -117,6 +117,18 @@ int mcu_tmr_getinfo(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
 
 	// set supported flags and events
+	info->o_flags = TMR_FLAG_IS_SOURCE_CPU |
+			TMR_FLAG_IS_SOURCE_IC0 |
+			TMR_FLAG_IS_SOURCE_IC1 |
+			TMR_FLAG_IS_SOURCE_EDGEFALLING |
+			TMR_FLAG_IS_SOURCE_EDGEBOTH |
+			TMR_FLAG_IS_SOURCE_IC1 |
+			TMR_FLAG_SET_CHANNEL |
+			TMR_FLAG_IS_CHANNEL_RESET_ON_MATCH |
+			TMR_FLAG_IS_CHANNEL_STOP_ON_MATCH |
+			TMR_FLAG_IS_CHANNEL_SET_OUTPUT_ON_MATCH |
+			TMR_FLAG_IS_CHANNEL_CLEAR_OUTPUT_ON_MATCH |
+			TMR_FLAG_IS_CHANNEL_TOGGLE_OUTPUT_ON_MATCH;
 	info->freq = mcu_board_config.core_periph_freq / (tmr_regs_table[port]->PR+1);
 
 
@@ -213,7 +225,7 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 		}
 	}
 
-	if( o_flags & (TMR_FLAG_SET_CHANNEL|TMR_FLAG_SET_CHANNEL) ){
+	if( o_flags & (TMR_FLAG_SET_TIMER|TMR_FLAG_SET_CHANNEL) ){
 		//if any pin assignment values are non 0xff -- set them to use the
 		if( mcu_set_pin_assignment(
 				&(attr->pin_assignment),
