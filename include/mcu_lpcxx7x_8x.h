@@ -112,7 +112,7 @@ typedef struct MCU_PACK {
 	  __IO uint32_t DynamicRasCas;
 } LPC_EMC_Dynamic_Type;
 
-#define MCU_EMC_PORTS 1
+#define MCU_EMC_PORTS 0
 #define MCU_EMC_CHANS 4
 #define MCU_EMC_STATIC_REGS { (LPC_EMC_Static_Type*)&LPC_EMC->StaticConfig0, (LPC_EMC_Static_Type*)&LPC_EMC->StaticConfig1, (LPC_EMC_Static_Type*)&LPC_EMC->StaticConfig2, (LPC_EMC_Static_Type*)&LPC_EMC->StaticConfig3 }
 #define MCU_EMC_DYNAMIC_REGS { (LPC_EMC_Dynamic_Type*)&LPC_EMC->DynamicConfig0, (LPC_EMC_Dynamic_Type*)&LPC_EMC->DynamicConfig1, (LPC_EMC_Dynamic_Type*)&LPC_EMC->DynamicConfig2, (LPC_EMC_Dynamic_Type*)&LPC_EMC->DynamicConfig3 }

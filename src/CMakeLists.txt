@@ -1,0 +1,36 @@
+
+set(SOURCES
+  ${SOURCES_PREFIX}/adc_dev.c
+  ${SOURCES_PREFIX}/core_dev.c
+  ${SOURCES_PREFIX}/core_initclock.c
+  ${SOURCES_PREFIX}/core_set_pinsel_func.c
+  ${SOURCES_PREFIX}/core_setusbclock.c
+  ${SOURCES_PREFIX}/core_sleep.c
+  ${SOURCES_PREFIX}/core_startup.c
+  ${SOURCES_PREFIX}/crc_dev.c
+  ${SOURCES_PREFIX}/dac_dma_dev.c
+  ${SOURCES_PREFIX}/dma_dev.c
+  ${SOURCES_PREFIX}/eeprom_dev.c
+  ${SOURCES_PREFIX}/eint_dev.c
+  ${SOURCES_PREFIX}/emc_dev.c
+  ${SOURCES_PREFIX}/enet_dev.c
+  ${SOURCES_PREFIX}/fault_dev.c
+  ${SOURCES_PREFIX}/flash_dev.c
+  ${SOURCES_PREFIX}/i2c_dev.c
+  ${SOURCES_PREFIX}/i2s_dev.c
+  ${SOURCES_PREFIX}/lpc_flash.c
+  ${SOURCES_PREFIX}/mci_dev.c
+  ${SOURCES_PREFIX}/mcu_dev.c
+  ${SOURCES_PREFIX}/mem_dev.c
+  ${SOURCES_PREFIX}/mpu_dev.c
+  ${SOURCES_PREFIX}/pio_dev.c
+  ${SOURCES_PREFIX}/pwm_dev.c
+  ${SOURCES_PREFIX}/qei_dev.c
+  ${SOURCES_PREFIX}/rtc_dev.c
+  ${SOURCES_PREFIX}/spi_dev.c
+  ${SOURCES_PREFIX}/ssp_dev.c
+  ${SOURCES_PREFIX}/tmr_dev.c
+  ${SOURCES_PREFIX}/uart_dev.c
+  ${SOURCES_PREFIX}/usb_dev.c
+  ${SOURCES_PREFIX}/wdt.c
+  PARENT_SCOPE)

@@ -66,3 +66,32 @@ int mcu_core_user_sleep(core_sleep_t level){
 	return 0;
 }
 
+void mcu_core_prepare_deepsleep(int level){
+	if( level >= CORE_DEEPSLEEP ){
+#if defined LPCXX7X_8X
+		LPC_SC->CLKSRCSEL = 0; //Use IRC
+		LPC_SC->CCLKSEL = 1; //Use sysclk with no divider
+#endif
+		//disable PLL and use IRC
+		MCU_CLR_BIT(LPC_SC->PLL0CON, PLLE0);
+		LPC_SC->PLL0FEED = 0xAA;
+		LPC_SC->PLL0FEED = 0x55;
+	}
+}
+
+void mcu_core_recover_deepsleep(int level){
+
+	if( MCU_TEST_BIT(LPC_SC->PCON, 8) ){
+		//deep sleep
+		MCU_SET_BIT(LPC_SC->PCON, 8);
+	}
+
+	if( MCU_TEST_BIT(LPC_SC->PCON, 9) ){
+		//deep sleep
+		MCU_SET_BIT(LPC_SC->PCON, 9);
+	}
+
+	mcu_core_initclock(1);
+	mcu_core_setusbclock(mcu_board_config.core_osc_freq); //set the USB clock
+}
+
