@@ -231,7 +231,7 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 				&(attr->pin_assignment),
 				MCU_CONFIG_PIN_ASSIGNMENT(tmr_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(tmr_pin_assignment_t),
-				CORE_PERIPH_TMR, port, 0, 0) < 0 ){
+                CORE_PERIPH_TMR, port, 0, 0, 0) < 0 ){
 			return -1;
 		}
 	}

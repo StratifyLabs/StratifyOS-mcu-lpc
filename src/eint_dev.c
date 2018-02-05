@@ -136,7 +136,7 @@ int mcu_eint_setattr(const devfs_handle_t * handle, void * ctl){
 			&(attr->pin_assignment),
 			MCU_CONFIG_PIN_ASSIGNMENT(eint_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(eint_pin_assignment_t),
-			CORE_PERIPH_EINT, port, configure_pin, &pattr) < 0 ){
+            CORE_PERIPH_EINT, port, configure_pin, 0, &pattr) < 0 ){
 		errno = EINVAL;
 		return -1 - offsetof(eint_attr_t, pin_assignment);
 	}

@@ -182,7 +182,7 @@ int mcu_i2s_setattr(const devfs_handle_t * handle, void * ctl){
 			&(attr->pin_assignment),
 			MCU_CONFIG_PIN_ASSIGNMENT(i2s_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(i2s_pin_assignment_t),
-			CORE_PERIPH_I2S, port, 0, 0) < 0 ){
+            CORE_PERIPH_I2S, port, 0, 0, 0) < 0 ){
 		return -1;
 	}
 

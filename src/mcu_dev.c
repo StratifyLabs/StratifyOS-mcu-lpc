@@ -18,9 +18,10 @@
 #include "lpc_local.h"
 
 const mcu_config_t mcu_config = {
-		.irq_total = MCU_LAST_IRQ,
-		.irq_middle_prio = MCU_MIDDLE_IRQ_PRIORITY,
-		.usb_logical_endpoint_count = DEV_USB_LOGICAL_ENDPOINT_COUNT
+    .irq_total = MCU_LAST_IRQ,
+    .irq_middle_prio = MCU_MIDDLE_IRQ_PRIORITY,
+    .usb_logical_endpoint_count = DEV_USB_LOGICAL_ENDPOINT_COUNT,
+    .delay_factor = MCU_DELAY_FACTOR,
 };
 
 

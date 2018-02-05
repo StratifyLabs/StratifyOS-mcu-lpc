@@ -190,7 +190,7 @@ int mcu_adc_setattr(const devfs_handle_t * handle, void * ctl){
 			&(attr->pin_assignment),
 			MCU_CONFIG_PIN_ASSIGNMENT(adc_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(adc_pin_assignment_t),
-			CORE_PERIPH_ADC, port, enable_pin, 0) < 0 ){
+            CORE_PERIPH_ADC, port, enable_pin, 0, 0) < 0 ){
 		return -1;
 	}
 

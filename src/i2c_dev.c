@@ -252,7 +252,7 @@ int mcu_i2c_setattr(const devfs_handle_t * handle, void * ctl){
 				&(attr->pin_assignment),
 				MCU_CONFIG_PIN_ASSIGNMENT(i2c_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(i2c_pin_assignment_t),
-				CORE_PERIPH_I2C, port, enable_opendrain_pin, (void*)internal_pullup) < 0 ){
+                CORE_PERIPH_I2C, port, enable_opendrain_pin, 0, (void*)internal_pullup) < 0 ){
 			return -1;
 		}
 

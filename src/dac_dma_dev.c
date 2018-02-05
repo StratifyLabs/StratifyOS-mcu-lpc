@@ -115,7 +115,7 @@ int mcu_dac_setattr(const devfs_handle_t * handle, void * ctl){
 			&(attr->pin_assignment),
 			MCU_CONFIG_PIN_ASSIGNMENT(dac_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(dac_pin_assignment_t),
-			CORE_PERIPH_DAC, port, 0, 0) < 0 ){
+            CORE_PERIPH_DAC, port, 0, 0, 0) < 0 ){
 		return -1;
 	}
 

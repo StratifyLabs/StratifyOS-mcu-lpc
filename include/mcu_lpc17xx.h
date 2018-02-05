@@ -163,6 +163,7 @@ int mcu_lpc_flash_get_serialno(uint32_t * dest);
 #define MCU_START_OF_AHB_SRAM 0x2007C000
 
 #define MCU_RAM_PAGES 60
+#define MCU_DELAY_FACTOR 12
 
 
 //Pin mapping differences between 17xx and 177x_8x
