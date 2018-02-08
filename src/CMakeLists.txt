@@ -8,8 +8,9 @@ set(SOURCES
   ${SOURCES_PREFIX}/core_sleep.c
   ${SOURCES_PREFIX}/core_startup.c
   ${SOURCES_PREFIX}/crc_dev.c
-  ${SOURCES_PREFIX}/dac_dma_dev.c
-  ${SOURCES_PREFIX}/dma_dev.c
+	${SOURCES_PREFIX}/dac_dev.c
+	${SOURCES_PREFIX}/dac_dma_dev.c
+	${SOURCES_PREFIX}/dma_dev.c
   ${SOURCES_PREFIX}/eeprom_dev.c
   ${SOURCES_PREFIX}/eint_dev.c
   ${SOURCES_PREFIX}/emc_dev.c

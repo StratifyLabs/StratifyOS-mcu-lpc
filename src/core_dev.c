@@ -33,8 +33,10 @@ int mcu_core_setpinfunc(const devfs_handle_t * handle, void * arg){
 			argp->periph_port);
 }
 
-void mcu_core_dev_power_on(const devfs_handle_t * handle){}
-void mcu_core_dev_power_off(const devfs_handle_t * handle){}
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(core, CORE_VERSION, I_MCU_TOTAL + I_CORE_TOTAL, mcu_core_setpinfunc, mcu_core_setclkout, mcu_core_setclkdivide, mcu_core_getmcuboardconfig)
+
+int mcu_core_open(const devfs_handle_t * handle){ return 0; }
+int mcu_core_close(const devfs_handle_t * handle){ return 0; }
 int mcu_core_dev_is_powered(const devfs_handle_t * handle){ return 1; }
 
 
@@ -254,4 +256,14 @@ void mcu_core_get_bootloader_api(void * args){
 	void * ptr;
 	memcpy(&ptr, (void*)(36), sizeof(void*)); //get pointer to boot api
 	memcpy(args, ptr, sizeof(bootloader_api_t)); //copy boot api
+}
+
+int mcu_core_read(const devfs_handle_t * handle, devfs_async_t * rop){
+    errno = ENOTSUP;
+    return -1;
+}
+
+int mcu_core_write(const devfs_handle_t * handle, devfs_async_t * rop){
+    errno = ENOTSUP;
+    return -1;
 }

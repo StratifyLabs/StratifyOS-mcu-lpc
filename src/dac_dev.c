@@ -41,9 +41,6 @@ typedef struct {
 
 static dac_local_t dac_local[MCU_DAC_PORTS] MCU_SYS_MEM;
 
-//DMA functions
-static int dac_dma_transfer(const devfs_handle_t * cfg);
-static int dma_write_complete(void * context, const mcu_event_t * data);
 
 #if defined __lpc43xx
 static int write_complete(void * context);
@@ -51,9 +48,9 @@ static int write_complete(void * context);
 
 static void exec_callback(int port, u32 o_events);
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(dac_dma, DAC_VERSION, I_MCU_TOTAL + I_DAC_TOTAL, mcu_dac_dma_get, mcu_dac_dma_set)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(dac, DAC_VERSION, I_MCU_TOTAL + I_DAC_TOTAL, mcu_dac_get, mcu_dac_set)
 
-int mcu_dac_dma_open(const devfs_handle_t * handle){
+int mcu_dac_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( dac_local[port].ref_count == 0 ){
 		dac_local[port].ref_count++;
@@ -64,7 +61,7 @@ int mcu_dac_dma_open(const devfs_handle_t * handle){
     return 0;
 }
 
-int mcu_dac_dma_close(const devfs_handle_t * handle){
+int mcu_dac_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( dac_local[port].ref_count > 0 ){
 		if ( dac_local[port].ref_count == 1 ){
@@ -76,14 +73,14 @@ int mcu_dac_dma_close(const devfs_handle_t * handle){
     return 0;
 }
 
-int mcu_dac_dma_getinfo(const devfs_handle_t * handle, void * ctl){
+int mcu_dac_getinfo(const devfs_handle_t * handle, void * ctl){
 	dac_info_t * info = ctl;
 	info->o_flags = 0;
 	info->freq = DAC_MAX_FREQ;
 	return 0;
 }
 
-int mcu_dac_dma_setattr(const devfs_handle_t * handle, void * ctl){
+int mcu_dac_setattr(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
 	u32 freq;
 	int clkdiv;
@@ -120,12 +117,10 @@ int mcu_dac_dma_setattr(const devfs_handle_t * handle, void * ctl){
 
 	LPC_DAC->CNTVAL = clkdiv;
 
-    mcu_dma_init(0);
-
 	return 0;
 }
 
-int mcu_dac_dma_setaction(const devfs_handle_t * handle, void * ctl){
+int mcu_dac_setaction(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
 	mcu_action_t * action = (mcu_action_t*)ctl;
 	if( action->handler.callback == 0 ){
@@ -144,7 +139,7 @@ int mcu_dac_dma_setaction(const devfs_handle_t * handle, void * ctl){
 	return 0;
 }
 
-int mcu_dac_dma_get(const devfs_handle_t * handle, void * ctl){
+int mcu_dac_get(const devfs_handle_t * handle, void * ctl){
 	mcu_channel_t * channel = ctl;
 	if( channel->loc == 0 ){
 		channel->value = LPC_DAC->CR;
@@ -154,7 +149,7 @@ int mcu_dac_dma_get(const devfs_handle_t * handle, void * ctl){
 	return -1;
 }
 
-int mcu_dac_dma_set(const devfs_handle_t * handle, void * ctl){
+int mcu_dac_set(const devfs_handle_t * handle, void * ctl){
 	mcu_channel_t * channel = ctl;
 	if( channel->loc == 0 ){
 		LPC_DAC->CR = channel->value;
@@ -164,21 +159,17 @@ int mcu_dac_dma_set(const devfs_handle_t * handle, void * ctl){
 	return -1;
 }
 
-int mcu_dac_dma_read(const devfs_handle_t * cfg, devfs_async_t * async){
+int mcu_dac_read(const devfs_handle_t * cfg, devfs_async_t * async){
     errno = ENOTSUP;
     return -1;
 }
 
-int mcu_dac_dma_write(const devfs_handle_t * cfg, devfs_async_t * wop){
+int mcu_dac_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	//Check to see if the DAC is busy
+#if defined __lpc43xx
 	const int port = cfg->port;
 	if ( wop->loc != 0 ){
 		errno = EINVAL;
-		return -1;
-	}
-
-	if ( dac_local[port].handler.callback ){
-		errno = EBUSY;
 		return -1;
 	}
 
@@ -187,10 +178,11 @@ int mcu_dac_dma_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 		return -1;
 	}
 
+	//LPC43xx had a dedicated DAC interrupt
 	dac_local[port].bufp = (void * volatile)wop->buf;
 	dac_local[port].len = (wop->nbyte) >> 2;
-	dac_dma_transfer(cfg);
-	LPC_DAC->CTRL = DAC_CTRL_DMA_ENA|DAC_CTRL_CNT_ENA|DAC_CTRL_DBUF_ENA;
+	//dac_dma_transfer(cfg);
+	//LPC_DAC->CTRL = DAC_CTRL_DMA_ENA|DAC_CTRL_CNT_ENA|DAC_CTRL_DBUF_ENA;
 	wop->nbyte = (wop->nbyte) & ~0x3;
 
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
@@ -201,40 +193,10 @@ int mcu_dac_dma_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	dac_local[port].handler.context = wop->handler.context;
 
 	return 0;
-}
-
-int dac_dma_transfer(const devfs_handle_t * cfg){
-	int page_size;
-	int ctrl;
-	int err;
-	const int port = cfg->port;
-
-	page_size = dac_local[port].len > (DMA_MAX_TRANSFER_SIZE >> 2) ? (DMA_MAX_TRANSFER_SIZE >> 2) : dac_local[port].len;
-
-	ctrl = DMA_CTRL_TRANSFER_SIZE(page_size)|
-			DMA_CTRL_SRC_WIDTH32|
-			DMA_CTRL_DEST_WIDTH32|
-			DMA_CTRL_ENABLE_TERMINAL_COUNT_INT|
-			DMA_CTRL_SRC_INC;
-
-	err = mcu_dma_transfer(DMA_MEM_TO_PERIPH,
-			DAC_DMA_CHAN,
-			(void*)&(LPC_DAC->CR),
-			(void*)dac_local[port].bufp,
-			ctrl,
-			dma_write_complete,
-			(void*)cfg,
-			DMA_REQ_DAC,
-			0);
-
-
-	if ( err < 0 ){
-		return -1;
-	}
-
-	dac_local[port].len -= page_size;
-	dac_local[port].bufp += (page_size << 2);
-	return 0;
+#else
+	errno = ENOTSUP;
+	return -1;
+#endif
 }
 
 void exec_callback(int port, u32 o_events){
@@ -244,16 +206,32 @@ void exec_callback(int port, u32 o_events){
 	mcu_execute_event_handler(&(dac_local[port].handler), o_events, 0);
 }
 
-int dma_write_complete(void * context, const mcu_event_t * data){
+
+
+#if defined __lpc43xx
+
+int write_complete(void * context){
 	const devfs_handle_t * cfg = context;
 	const int port = cfg->port;
 	if ( dac_local[port].len ){
-		dac_dma_transfer(cfg);
+		//dac_dma_transfer(cfg);
 		return 1; //keep interrupt in place
 	} else {
 		exec_callback(port, MCU_EVENT_FLAG_WRITE_COMPLETE);
 	}
 	return 0;
 }
+
+//when not using DMA -- use dedicated interrupt
+void mcu_core_dac0_isr(){
+
+	write_complete(dac_local[0].handler.context);
+}
+
+
+#endif
+
+
+
 
 #endif

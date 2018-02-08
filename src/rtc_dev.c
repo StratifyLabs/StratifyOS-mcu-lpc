@@ -58,7 +58,9 @@ static int set_alarm(int port, const rtc_attr_t * attr);
 static int get_alarm(int port, rtc_info_t * info);
 static int set_count_event(int port, u32 o_flags);
 
-void mcu_rtc_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(rtc, RTC_VERSION, I_MCU_TOTAL + I_RTC_TOTAL, mcu_rtc_set, mcu_rtc_get)
+
+int mcu_rtc_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	LPC_RTC_Type * regs = rtc_regs[port];
 	if ( rtc_local.ref_count == 0 ){
@@ -66,9 +68,11 @@ void mcu_rtc_dev_power_on(const devfs_handle_t * handle){
 		regs->CCR = (CLKEN);
 	}
 	rtc_local.ref_count++;
+
+    return 0;
 }
 
-void mcu_rtc_dev_power_off(const devfs_handle_t * handle){
+int mcu_rtc_close(const devfs_handle_t * handle){
 	//LPC_RTC_Type * regs = rtc_regs[port];
 	if ( rtc_local.ref_count > 0 ){
 		if ( rtc_local.ref_count == 1 ){
@@ -76,6 +80,8 @@ void mcu_rtc_dev_power_off(const devfs_handle_t * handle){
 		}
 		rtc_local.ref_count--;
 	}
+
+    return 0;
 }
 
 int mcu_rtc_dev_is_powered(const devfs_handle_t * handle){
@@ -138,7 +144,7 @@ int mcu_rtc_setaction(const devfs_handle_t * handle, void * ctl){
 	return 0;
 }
 
-int mcu_rtc_dev_read(const devfs_handle_t * cfg, devfs_async_t * rop){
+int mcu_rtc_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 	errno = ENOTSUP;
 	return -1;
 }
@@ -247,6 +253,12 @@ int mcu_rtc_get(const devfs_handle_t * handle, void * ctl){
 	timep->useconds = 0;
 	return 0;
 }
+
+int mcu_rtc_write(const devfs_handle_t * handle, devfs_async_t * async){
+    errno = ENOTSUP;
+    return -1;
+}
+
 
 int set_count_event(int port, u32 o_flags){
 	LPC_RTC_Type * regs = rtc_regs[port];

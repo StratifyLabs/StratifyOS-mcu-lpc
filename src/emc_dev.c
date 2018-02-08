@@ -26,7 +26,7 @@
 LPC_EMC_Static_Type * const mcu_static_regs[MCU_EMC_CHANS] = MCU_EMC_STATIC_REGS;
 LPC_EMC_Dynamic_Type * const mcu_dynamic_regs[MCU_EMC_CHANS] = MCU_EMC_DYNAMIC_REGS;
 
-void mcu_emc_dev_power_on(const devfs_handle_t * handle){
+void mcu_emc_open(const devfs_handle_t * handle){
 
 	//turn on the clock
 
@@ -35,7 +35,7 @@ void mcu_emc_dev_power_on(const devfs_handle_t * handle){
 
 }
 
-void mcu_emc_dev_power_off(const devfs_handle_t * handle){
+void mcu_emc_close(const devfs_handle_t * handle){
 	//EMC stays on after it has been enabled
 
 	//mcu_lpc_core_disable_pwr(PCEMC);

@@ -60,7 +60,9 @@ void enable_pin(const mcu_pin_t * pin, void * arg){
 #define enable_pin 0
 #endif
 
-void mcu_ssp_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(ssp, SPI_VERSION, I_MCU_TOTAL + I_SPI_TOTAL, mcu_ssp_swap)
+
+int mcu_ssp_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( ssp_local[port].ref_count == 0 ){
 
@@ -85,10 +87,10 @@ void mcu_ssp_dev_power_on(const devfs_handle_t * handle){
 		ssp_local[port].handler.callback = NULL;
 	}
 	ssp_local[port].ref_count++;
-
+    return 0;
 }
 
-void mcu_ssp_dev_power_off(const devfs_handle_t * handle){
+int mcu_ssp_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( ssp_local[port].ref_count > 0 ){
 		if ( ssp_local[port].ref_count == 1 ){
@@ -111,21 +113,14 @@ void mcu_ssp_dev_power_off(const devfs_handle_t * handle){
 		}
 		ssp_local[port].ref_count--;
 	}
+    return 0;
 }
-
-int mcu_ssp_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	return ( ssp_local[port].ref_count != 0 );
-}
-
 
 int mcu_ssp_getinfo(const devfs_handle_t * handle, void * ctl){
 	spi_info_t * info = ctl;
 
 	//set flags
 	info->o_flags = 0;
-
-
 	return 0;
 }
 
@@ -281,11 +276,11 @@ int byte_swap(int port, int byte){
 
 }
 
-int mcu_ssp_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_ssp_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	return ssp_port_transfer(handle, 0, wop);
 }
 
-int mcu_ssp_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_ssp_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	return ssp_port_transfer(handle, 1, rop);
 }
 

@@ -49,7 +49,7 @@ LPC_ETHERNET_Type * const enet_regs_table[MCU_ENET_PORTS] = MCU_ENET_REGS;
 
 u8 const enet_irqs[MCU_ENET_PORTS] = MCU_ENET_IRQS;
 
-void mcu_enet_dev_power_on(const devfs_handle_t * handle){
+int mcu_enet_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( enet_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCENET);
@@ -59,10 +59,10 @@ void mcu_enet_dev_power_on(const devfs_handle_t * handle){
 	}
 	enet_local[port].ref_count++;
 
-
+    return 0;
 }
 
-void mcu_enet_dev_power_off(const devfs_handle_t * handle){
+int mcu_enet_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( enet_local[port].ref_count > 0 ){
 		if ( enet_local[port].ref_count == 1 ){
@@ -73,11 +73,7 @@ void mcu_enet_dev_power_off(const devfs_handle_t * handle){
 		}
 		enet_local[port].ref_count--;
 	}
-}
-
-int mcu_enet_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	return ( enet_local[port].ref_count != 0 );
+    return 0;
 }
 
 int mcu_enet_getinfo(const devfs_handle_t * handle, void * ctl){
@@ -175,7 +171,7 @@ int mcu_enet_setaction(const devfs_handle_t * handle, void * ctl){
 
 
 
-int mcu_enet_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_enet_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	int port = handle->port;
 
 	if( enet_local[port].read.callback ){
@@ -214,7 +210,7 @@ int mcu_enet_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	return 0;
 }
 
-int mcu_enet_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_enet_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	int port = handle->port;
 
 

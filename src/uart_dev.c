@@ -127,7 +127,9 @@ u8 const uart_irqs[UART_PORTS] = MCU_UART_IRQS;
 static void exec_readcallback(int port, LPC_UART_Type * uart_regs, u32 o_events);
 static void exec_writecallback(int port, LPC_UART_Type * uart_regs, u32 o_events);
 
-void mcu_uart_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(uart, UART_VERSION, I_MCU_TOTAL + I_UART_TOTAL, mcu_uart_get, mcu_uart_put, mcu_uart_flush)
+
+int mcu_uart_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( uart_local[port].ref_count == 0 ){
 		switch(port){
@@ -160,10 +162,10 @@ void mcu_uart_dev_power_on(const devfs_handle_t * handle){
 	}
 	uart_local[port].ref_count++;
 
-
+    return 0;
 }
 
-void mcu_uart_dev_power_off(const devfs_handle_t * handle){
+int mcu_uart_close(const devfs_handle_t * handle){
 	int port = handle->port;
 
 	if ( uart_local[port].ref_count > 0 ){
@@ -204,10 +206,7 @@ void mcu_uart_dev_power_off(const devfs_handle_t * handle){
 		}
 		uart_local[port].ref_count--;
 	}
-}
-
-int mcu_uart_dev_is_powered(const devfs_handle_t * handle){
-	return ( uart_local[handle->port].ref_count != 0 );
+    return 0;
 }
 
 int mcu_uart_getinfo(const devfs_handle_t * handle, void * ctl){
@@ -440,7 +439,7 @@ int mcu_uart_getall(const devfs_handle_t * handle, void * ctl){
 
 
 
-int mcu_uart_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_uart_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	int len;
 	int port;
 	LPC_UART_Type * uart_regs;
@@ -482,7 +481,7 @@ int mcu_uart_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	return len;
 }
 
-int mcu_uart_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_uart_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	LPC_UART_Type * uart_regs;
 	int port;
 	port = handle->port;

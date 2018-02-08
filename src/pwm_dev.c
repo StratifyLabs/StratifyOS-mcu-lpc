@@ -31,12 +31,12 @@ static void exec_callback(int port, LPC_PWM_Type * regs, u32 o_events);
 static void force_latch(LPC_PWM_Type * regs);
 
 typedef struct MCU_PACK {
-	const uint32_t * volatile duty;
+    const u32 * volatile duty;
 	volatile int pwm_nbyte_len;
-	uint8_t chan;
-	uint8_t pin_assign;
-	uint8_t enabled_channels;
-	uint8_t ref_count;
+    u8 chan;
+    u8 pin_assign;
+    u8 enabled_channels;
+    u8 ref_count;
 	mcu_event_handler_t handler;
 } pwm_local_t;
 
@@ -68,7 +68,10 @@ static void configure_pin(const mcu_pin_t * pin, void * arg){
 
 }
 
-void mcu_pwm_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(pwm, PWM_VERSION, I_MCU_TOTAL + I_PWM_TOTAL, mcu_pwm_setchannel, mcu_pwm_getchannel, mcu_pwm_set, mcu_pwm_get, mcu_pwm_enable, mcu_pwm_disable)
+
+
+int mcu_pwm_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( pwm_local[port].ref_count == 0 ){
 		switch(port){
@@ -86,9 +89,10 @@ void mcu_pwm_dev_power_on(const devfs_handle_t * handle){
 
 	}
 	pwm_local[port].ref_count++;
+    return 0;
 }
 
-void mcu_pwm_dev_power_off(const devfs_handle_t * handle){
+int mcu_pwm_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( pwm_local[port].ref_count > 0 ){
 		if ( pwm_local[port].ref_count == 1 ){
@@ -107,19 +111,7 @@ void mcu_pwm_dev_power_off(const devfs_handle_t * handle){
 		}
 		pwm_local[port].ref_count--;
 	}
-}
-
-int mcu_pwm_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	switch(port){
-#ifdef LPCXX7X_8X
-	case 0:
-		return mcu_lpc_core_pwr_enabled(PCPWM0);
-#endif
-	case 1:
-		return mcu_lpc_core_pwr_enabled(PCPWM1);
-	}
-	return 0;
+    return 0;
 }
 
 int mcu_pwm_getinfo(const devfs_handle_t * handle, void * ctl){
@@ -322,8 +314,12 @@ int mcu_pwm_disable(const devfs_handle_t * handle, void * ctl){
 	return 0;
 }
 
+int mcu_pwm_read(const devfs_handle_t * handle, devfs_async_t * async){
+    errno = ENOTSUP;
+    return -1;
+}
 
-int mcu_pwm_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_pwm_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	int port = handle->port;
 	LPC_PWM_Type * regs = pwm_regs_table[port];
 

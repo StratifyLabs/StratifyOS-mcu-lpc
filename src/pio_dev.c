@@ -33,7 +33,9 @@ static pio_local_t m_pio2_local MCU_SYS_MEM;
 
 static int set_event(int port, int event, int pin);
 
-void mcu_pio_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(pio, PIO_VERSION, I_MCU_TOTAL + I_PIO_TOTAL, mcu_pio_setmask, mcu_pio_clrmask, mcu_pio_get, mcu_pio_set)
+
+int mcu_pio_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( port == 0 ){
 		if ( m_pio0_local.ref_count == 0 ){
@@ -46,9 +48,10 @@ void mcu_pio_dev_power_on(const devfs_handle_t * handle){
 		}
 		m_pio2_local.ref_count++;
 	}
+    return 0;
 }
 
-void mcu_pio_dev_power_off(const devfs_handle_t * handle){
+int mcu_pio_close(const devfs_handle_t * handle){
 	int port = handle->port;
 
 	if ( port == 0 ){
@@ -66,25 +69,7 @@ void mcu_pio_dev_power_off(const devfs_handle_t * handle){
 			m_pio2_local.ref_count--;
 		}
 	}
-}
-
-int mcu_pio_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	if ( port == 0 ){
-		if ( m_pio0_local.ref_count > 0 ){
-			return 1;
-		} else {
-			return 0;
-		}
-	} else if ( port == 2 ){
-		if ( m_pio2_local.ref_count > 0 ){
-			return 1;
-		} else {
-			return 0;
-		}
-	} else {
-		return 1;
-	}
+    return 0;
 }
 
 int set_event(int port, int event, int pin){
@@ -136,18 +121,22 @@ int set_event(int port, int event, int pin){
 	return 0;
 }
 
+int mcu_pio_read(const devfs_handle_t * handle, devfs_async_t * async){
+    errno = ENOTSUP;
+    return -1;
+}
 
-int mcu_pio_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_pio_write(const devfs_handle_t * handle, devfs_async_t * async){
 	mcu_action_t * action;
 
-	if( wop->nbyte != sizeof(mcu_action_t) ){
+    if( async->nbyte != sizeof(mcu_action_t) ){
 		errno = EINVAL;
 		return -1;
 	}
 
-	action = (mcu_action_t*)wop->buf;
-	action->handler.callback = wop->handler.callback;
-	action->handler.context = wop->handler.context;
+    action = (mcu_action_t*)async->buf;
+    action->handler.callback = async->handler.callback;
+    action->handler.context = async->handler.context;
 	return mcu_pio_setaction(handle, action);
 }
 

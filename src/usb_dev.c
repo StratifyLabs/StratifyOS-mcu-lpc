@@ -113,7 +113,9 @@ u32 usb_sie_rd_cmd_dat (u32 cmd){
 	return usb_sie_rd_dat();
 }
 
-void mcu_usb_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(usb, USB_VERSION, I_MCU_TOTAL + I_USB_TOTAL, mcu_usb_isconnected)
+
+int mcu_usb_open(const devfs_handle_t * handle){
 	if ( usb_local.ref_count == 0 ){
 		//Set callbacks to NULL
 		usb_local.connected = 0;
@@ -124,9 +126,10 @@ void mcu_usb_dev_power_on(const devfs_handle_t * handle){
 		while( LPC_USB->USBClkCtrl != 0x12 ){}  //wait for clocks
 	}
 	usb_local.ref_count++;
+    return 0;
 }
 
-void mcu_usb_dev_power_off(const devfs_handle_t * handle){
+int mcu_usb_close(const devfs_handle_t * handle){
 	if ( usb_local.ref_count > 0 ){
 		if ( usb_local.ref_count == 1 ){
 			cortexm_disable_irq((void*)(USB_IRQn));  //Enable the USB interrupt
@@ -136,19 +139,11 @@ void mcu_usb_dev_power_off(const devfs_handle_t * handle){
 		}
 		usb_local.ref_count--;
 	}
+    return 0;
 }
-
-int mcu_usb_dev_is_powered(const devfs_handle_t * handle){
-	if( mcu_lpc_core_pwr_enabled(PCUSB) ){
-		return 1;
-	}
-	return 0;
-}
-
 
 int mcu_usb_getinfo(const devfs_handle_t * handle, void * ctl){
 	usb_info_t * info = ctl;
-
 	info->o_flags = 0;
 	info->o_events = 0;
 	return 0;
@@ -299,7 +294,7 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 	return ret;
 }
 
-int mcu_usb_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_usb_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	int ret;
 	int loc = rop->loc;
 
@@ -337,7 +332,7 @@ int mcu_usb_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	return ret;
 }
 
-int mcu_usb_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_usb_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	//Asynchronous write
 	int ep;
 	int loc = wop->loc;

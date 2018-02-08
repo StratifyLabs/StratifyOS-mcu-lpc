@@ -53,7 +53,7 @@ typedef struct {
 mci_attr_t mci_local_attr[MCU_MCI_PORTS] MCU_SYS_MEM;
 mci_local_t mci_local[MCU_MCI_PORTS] MCU_SYS_MEM;
 
-void mcu_mci_dev_power_on(const devfs_handle_t * handle){
+int mcu_mci_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( mci_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCMCI);
@@ -61,9 +61,10 @@ void mcu_mci_dev_power_on(const devfs_handle_t * handle){
 		mci_local[port].handler.callback = NULL;
 	}
 	mci_local[port].ref_count++;
+    return 0;
 }
 
-void mcu_mci_dev_power_off(const devfs_handle_t * handle){
+int mcu_mci_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( mci_local[port].ref_count > 0 ){
 		if ( mci_local[port].ref_count == 1 ){
@@ -72,6 +73,7 @@ void mcu_mci_dev_power_off(const devfs_handle_t * handle){
 		}
 		mci_local[port].ref_count--;
 	}
+    return 0;
 }
 
 int mcu_mci_dev_is_powered(const devfs_handle_t * handle){
@@ -177,7 +179,7 @@ static int mcu_mci_write_fifo(LPC_MCI_Type * regs, uint32_t * src, int nbyte){
 }
 
 
-int mcu_mci_dev_write(const devfs_handle_t * cfg, devfs_async_t * wop){
+int mcu_mci_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	int port = cfg->port;
 	LPC_MCI_Type * regs = mci_regs_table[port];
 
@@ -201,7 +203,7 @@ int mcu_mci_dev_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	return -1;
 }
 
-int mcu_mci_dev_read(const devfs_handle_t * cfg, devfs_async_t * rop){
+int mcu_mci_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 	return -1;
 }
 

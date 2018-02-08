@@ -50,8 +50,9 @@ static int calc_page(int loc){
 	return loc / MCU_EEPROM_PAGE_SIZE;
 }
 
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(eeprom, EEPROM_VERSION)
 
-void mcu_eeprom_dev_power_on(const devfs_handle_t * handle){
+int mcu_eeprom_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	uint8_t phase[3];
 	int cpu_mhz;
@@ -69,17 +70,18 @@ void mcu_eeprom_dev_power_on(const devfs_handle_t * handle){
 
 		//initialize the STATE register
 		cpu_mhz = mcu_board_config.core_cpu_freq / 1000000;
-		phase[0] = (((cpu_mhz*15) + 500) / 1000) - 1;
-		phase[1] = (((cpu_mhz*55) + 500) / 1000) - 1;
-		phase[2] = (((cpu_mhz*35) + 500) / 1000) - 1;
+        phase[0] = (((cpu_mhz*15) + 999) / 1000);
+        phase[1] = (((cpu_mhz*55) + 999) / 1000);
+        phase[2] = (((cpu_mhz*35) + 999) / 1000);
 		regs->WSTATE = phase[0] | (phase[1]<<8) | (phase[2]<<16);
 
 	}
 
 	eeprom_local[port].ref_count++;
+    return 0;
 }
 
-void mcu_eeprom_dev_power_off(const devfs_handle_t * handle){
+int mcu_eeprom_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	LPC_EEPROM_Type * regs = eeprom_regs[port];
 
@@ -93,21 +95,17 @@ void mcu_eeprom_dev_power_off(const devfs_handle_t * handle){
 		}
 		eeprom_local[port].ref_count--;
 	}
-
+    return 0;
 }
-
-int mcu_eeprom_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	LPC_EEPROM_Type * regs = eeprom_regs[port];
-	return ( regs->PWRDWN & (1<<0) ) == 0;
-}
-
 
 int mcu_eeprom_getinfo(const devfs_handle_t * handle, void * ctl){
-	eeprom_attr_t * attr = ctl;
-	attr->size = 4032;
+    eeprom_info_t * info = ctl;
+    info->size = MCU_EEPROM_SIZE;
+    info->page_size = MCU_EEPROM_PAGE_SIZE;
+    info->o_flags = 0;
 	return 0;
 }
+
 int mcu_eeprom_setattr(const devfs_handle_t * handle, void * ctl){
 	return 0;
 }
@@ -131,7 +129,7 @@ int mcu_eeprom_setaction(const devfs_handle_t * handle, void * ctl){
 }
 
 
-int mcu_eeprom_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_eeprom_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	int port = handle->port;
 	if ( wop->nbyte == 0 ){
 		return 0;
@@ -185,26 +183,25 @@ int mcu_eeprom_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	eeprom_local[port].page++;
 	eeprom_local[port].offset = 0;
 	regs->INT_SET_ENABLE = (1<<28);
-
 	regs->CMD = 6; //erase/program page
-
 
 	return 0;
 
 }
 
-int mcu_eeprom_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_eeprom_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	int port = handle->port;
-
-	if ( rop->nbyte == 0 ){
-		return 0;
-	}
 
 	//Check to see if the port is busy
 	if ( eeprom_local[port].handler.callback ){
 		errno = EBUSY;
 		return -1;
 	}
+
+
+    if ( rop->nbyte == 0 ){
+        return 0;
+    }
 
 	//check for a valid rop->loc value
 	if( ((rop->loc + rop->nbyte) > MCU_EEPROM_SIZE) || (rop->loc < 0) ){
@@ -219,11 +216,8 @@ int mcu_eeprom_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	eeprom_local[port].page = calc_page(rop->loc);
 	eeprom_local[port].offset = calc_offset(rop->loc);
 
-
 	LPC_EEPROM_Type * regs = eeprom_regs[port];
 	regs->INTSTATCLR = (1<<26) | (1<<28);
-
-
 	regs->ADDR = eeprom_local[port].offset | (eeprom_local[port].page << 6);
 	regs->CMD = 0 | (1<<3);
 	do {
@@ -261,7 +255,7 @@ void exec_callback(int port, u32 o_flags, void * data){
 void mcu_core_eeprom0_isr(){
 	const int port = 0;
 	LPC_EEPROM_Type * regs = eeprom_regs[port];
-	uint32_t status = regs->INTSTAT;
+    u32 status = regs->INTSTAT;
 	regs->INTSTATCLR = status;
 	if( status & (1<<28) ){
 		//this was a program/erase action

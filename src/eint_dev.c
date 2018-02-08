@@ -44,17 +44,20 @@ static void configure_pin(const mcu_pin_t * pin, void * arg){
 	mcu_pio_setattr(&pio_handle, attr);
 }
 
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(eint, EINT_VERSION)
 
-void mcu_eint_dev_power_on(const devfs_handle_t * handle){
+
+int mcu_eint_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( eint_local[port].ref_count == 0 ){
 		eint_local[port].ref_count++;
 		reset_eint_port(port);
 	}
 	eint_local[port].ref_count++;
+    return 0;
 }
 
-void mcu_eint_dev_power_off(const devfs_handle_t * handle){
+int mcu_eint_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( eint_local[port].ref_count > 0 ){
 		if ( eint_local[port].ref_count == 1 ){
@@ -62,14 +65,15 @@ void mcu_eint_dev_power_off(const devfs_handle_t * handle){
 		}
 		eint_local[port].ref_count--;
 	}
+    return 0;
 }
 
-int mcu_eint_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	return eint_local[port].ref_count;
+int mcu_eint_read(const devfs_handle_t * handle, devfs_async_t * wop){
+    errno = ENOTSUP;
+    return -1;
 }
 
-int mcu_eint_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_eint_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	int port;
 	mcu_action_t * action;
 	port = handle->port;

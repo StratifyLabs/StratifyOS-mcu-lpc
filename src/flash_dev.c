@@ -37,10 +37,14 @@ static int get_last_bootloader_page(){
 	return ((int)(&_etext) + 4095)/4096;
 }
 
-void flash_dev_power_on(const devfs_handle_t * handle){}
-void flash_dev_power_off(const devfs_handle_t * handle){}
-int flash_dev_is_powered(const devfs_handle_t * handle){
-	return 1;
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(flash, FLASH_VERSION, I_MCU_TOTAL + I_FLASH_TOTAL, mcu_flash_eraseaddr, mcu_flash_erasepage, mcu_flash_getpage, mcu_flash_getsize, mcu_flash_getpageinfo, mcu_flash_writepage)
+
+int flash_open(const devfs_handle_t * handle){
+    return 0;
+}
+
+int flash_close(const devfs_handle_t * handle){
+    return 0;
 }
 
 int mcu_flash_getinfo(const devfs_handle_t * handle, void * ctl){
@@ -192,7 +196,12 @@ int mcu_flash_writepage(const devfs_handle_t * handle, void * ctl){
 
 }
 
-int mcu_flash_dev_read(const devfs_handle_t * cfg, devfs_async_t * rop){
+int mcu_flash_write(const devfs_handle_t * cfg, devfs_async_t * async){
+    errno = ENOTSUP;
+    return -1;
+}
+
+int mcu_flash_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 
 	if ( rop->loc >= (u32)&_flash_size ){
 		return -1;

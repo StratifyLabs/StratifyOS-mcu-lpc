@@ -56,11 +56,10 @@ static int get_ram_page(int addr);
 static int get_ram_page_size(int page);
 static int get_ram_page_addr(int page);
 
-void mcu_mem_dev_power_on(const devfs_handle_t * handle){}
-void mcu_mem_dev_power_off(const devfs_handle_t * handle){}
-int mcu_mem_dev_is_powered(const devfs_handle_t * handle){
-	return 1;
-}
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(mem, MEM_VERSION, I_MCU_TOTAL + I_MEM_TOTAL, mcu_mem_erasepage, mcu_mem_getpageinfo, mcu_mem_writepage)
+
+int mcu_mem_open(const devfs_handle_t * handle){ return 0; }
+int mcu_mem_close(const devfs_handle_t * handle){ return 0; }
 
 int mcu_mem_getsyspage(){
 	//this returns the page where the system memory is stored -- for LPC it is the page after SRAM (AHB SRAM)
@@ -215,7 +214,7 @@ int mcu_mem_writepage(const devfs_handle_t * handle, void * ctl){
 	return nbyte;
 }
 
-int mcu_mem_dev_write(const devfs_handle_t * cfg, devfs_async_t * wop){
+int mcu_mem_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 
 	if ( is_ram(wop->loc, wop->nbyte) ){
 		memcpy((void*)wop->loc, wop->buf, wop->nbyte);
@@ -226,7 +225,7 @@ int mcu_mem_dev_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	return -1;
 }
 
-int mcu_mem_dev_read(const devfs_handle_t * cfg, devfs_async_t * rop){
+int mcu_mem_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 	if ( (is_flash(rop->loc, rop->nbyte) ) ||
 			( is_ram(rop->loc, rop->nbyte) ) 	){
 		memcpy(rop->buf, (const void*)rop->loc, rop->nbyte);

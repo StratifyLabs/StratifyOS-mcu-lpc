@@ -59,8 +59,10 @@ i2s_local_t i2s_local[MCU_I2S_PORTS] MCU_SYS_MEM;
 
 static void exec_callback(i2s_transfer_t * transfer, u32 o_events);
 
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(i2s, I2S_VERSION, I_MCU_TOTAL + I_I2S_TOTAL, mcu_i2s_mute, mcu_i2s_unmute)
 
-void mcu_i2s_dev_power_on(const devfs_handle_t * handle){
+
+int mcu_i2s_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( i2s_local[port].ref_count == 0 ){
 		switch(port){
@@ -75,9 +77,10 @@ void mcu_i2s_dev_power_on(const devfs_handle_t * handle){
 		i2s_local[port].tx.bufp = 0;
 	}
 	i2s_local[port].ref_count++;
+    return 0;
 }
 
-void mcu_i2s_dev_power_off(const devfs_handle_t * handle){
+int mcu_i2s_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( i2s_local[port].ref_count > 0 ){
 		if ( i2s_local[port].ref_count == 1 ){
@@ -90,11 +93,7 @@ void mcu_i2s_dev_power_off(const devfs_handle_t * handle){
 		}
 		i2s_local[port].ref_count--;
 	}
-}
-
-int mcu_i2s_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	return ( i2s_local[port].ref_count != 0 );
+    return 0;
 }
 
 int mcu_i2s_getinfo(const devfs_handle_t * handle, void * ctl){
@@ -332,7 +331,7 @@ u8 write_tx_data(int port){
 	return level;
 }
 
-int mcu_i2s_dev_write(const devfs_handle_t * cfg, devfs_async_t * wop){
+int mcu_i2s_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	int port = DEVFS_GET_PORT(cfg);
 
 	//Grab the registers
@@ -371,7 +370,7 @@ int mcu_i2s_dev_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 }
 
 
-int mcu_i2s_dev_read(const devfs_handle_t * cfg, devfs_async_t * rop){
+int mcu_i2s_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 	int port = DEVFS_GET_PORT(cfg);
 	int nsamples;
 	int len;

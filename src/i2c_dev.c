@@ -134,7 +134,9 @@ static int i2c_transfer(const devfs_handle_t * handle, int op, devfs_async_t * d
 #define i2c_slave_nack(port) (LPC_I2C[port].CONCLR = I2CONCLR_AAC)
 #define i2c_slave_clr_int(port) (LPC_I2C[port].CONCLR = I2CONCLR_SIC)
 
-void mcu_i2c_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(i2c, I2C_VERSION)
+
+int mcu_i2c_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( i2c_local[port].ref_count == 0 ){
 		switch(port){
@@ -157,9 +159,10 @@ void mcu_i2c_dev_power_on(const devfs_handle_t * handle){
 		cortexm_enable_irq((void*)(u32)(i2c_irqs[port]));
 	}
 	i2c_local[port].ref_count++;
+    return 0;
 }
 
-void mcu_i2c_dev_power_off(const devfs_handle_t * handle){
+int mcu_i2c_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	LPC_I2C_Type * i2c_regs;
 	if ( i2c_local[port].ref_count > 0 ){
@@ -189,11 +192,7 @@ void mcu_i2c_dev_power_off(const devfs_handle_t * handle){
 		}
 		i2c_local[port].ref_count--;
 	}
-}
-
-int mcu_i2c_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	return ( i2c_local[port].ref_count != 0 );
+    return 0;
 }
 
 int mcu_i2c_getinfo(const devfs_handle_t * handle, void * ctl){
@@ -387,11 +386,11 @@ int mcu_i2c_setaction(const devfs_handle_t * handle, void * ctl){
 	return 0;
 }
 
-int mcu_i2c_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_i2c_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	return i2c_transfer(handle, WRITE_OP, wop);
 }
 
-int mcu_i2c_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_i2c_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	return i2c_transfer(handle, READ_OP, rop);
 }
 

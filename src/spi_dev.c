@@ -45,7 +45,9 @@ static void exec_callback(int port, u32 o_events);
 static int spi_port_transfer(const devfs_handle_t * handle, int is_read, devfs_async_t * dop);
 static int byte_swap(int port, int byte);
 
-void mcu_spi_dev_power_on(const devfs_handle_t * handle){
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(spi, SPI_VERSION, I_MCU_TOTAL + I_SPI_TOTAL, mcu_spi_swap)
+
+int mcu_spi_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( spi_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCSPI);
@@ -54,10 +56,10 @@ void mcu_spi_dev_power_on(const devfs_handle_t * handle){
 		spi_local[port].handler.callback = NULL;
 	}
 	spi_local[port].ref_count++;
-
+    return 0;
 }
 
-void mcu_spi_dev_power_off(const devfs_handle_t * handle){
+int mcu_spi_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( spi_local[port].ref_count > 0 ){
 		if ( spi_local[port].ref_count == 1 ){
@@ -66,13 +68,8 @@ void mcu_spi_dev_power_off(const devfs_handle_t * handle){
 		}
 		spi_local[port].ref_count--;
 	}
+    return 0;
 }
-
-int mcu_spi_dev_is_powered(const devfs_handle_t * handle){
-	int port = handle->port;
-	return ( spi_local[port].ref_count != 0 );
-}
-
 
 int mcu_spi_getinfo(const devfs_handle_t * handle, void * ctl){
 	spi_info_t * info = ctl;
@@ -154,8 +151,6 @@ int mcu_spi_setattr(const devfs_handle_t * handle, void * ctl){
 		regs->CR = cr0;
 
 	}
-
-
 	return 0;
 }
 
@@ -199,11 +194,11 @@ int byte_swap(int port, int byte){
 	return regs->DR;
 }
 
-int mcu_spi_dev_write(const devfs_handle_t * handle, devfs_async_t * wop){
+int mcu_spi_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	return spi_port_transfer(handle, 0, wop);
 }
 
-int mcu_spi_dev_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_spi_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	return spi_port_transfer(handle, 1, rop);
 }
 
