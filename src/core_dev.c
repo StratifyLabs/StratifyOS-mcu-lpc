@@ -121,7 +121,12 @@ int mcu_core_invokebootloader(int port, void * arg){
 	cortexm_delay_us(500*1000);
 	bootloader_api_t api;
 	mcu_core_get_bootloader_api(&api);
-	api.exec(0);
+    if( api.exec != 0 ){
+        api.exec(0);
+    } else {
+        //best we can do is a regular reset
+        cortexm_reset(NULL);
+    }
 	return 0;
 }
 
@@ -254,8 +259,15 @@ void mcu_core_set_nvic_priority(int irq, int prio){
 
 void mcu_core_get_bootloader_api(void * args){
 	void * ptr;
-	memcpy(&ptr, (void*)(36), sizeof(void*)); //get pointer to boot api
-	memcpy(args, ptr, sizeof(bootloader_api_t)); //copy boot api
+
+    u32 * value = (u32*)36;
+
+    if( *value != 0 ){
+        memcpy(&ptr, (void*)(36), sizeof(void*)); //get pointer to boot api
+        memcpy(args, ptr, sizeof(bootloader_api_t)); //copy boot api
+    } else {
+        memset(args, 0, sizeof(bootloader_api_t));
+    }
 }
 
 int mcu_core_read(const devfs_handle_t * handle, devfs_async_t * rop){
