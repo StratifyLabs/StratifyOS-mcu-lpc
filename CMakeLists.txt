@@ -35,3 +35,5 @@ set(SOS_LIB_TYPE release)
 include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib.cmake)
 set(SOS_LIB_TYPE debug)
 include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib.cmake)
+
+install(DIRECTORY ldscript/ DESTINATION lib/ldscripts)

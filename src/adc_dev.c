@@ -63,21 +63,14 @@ int mcu_adc_open(const devfs_handle_t * handle){
         cortexm_enable_irq((void*)(u32)(adc_irqs[port]));
         regs->INTEN = 0;
         memset(&adc_local, 0, sizeof(adc_local_t));
-#if defined __lpc13xx || defined __lpc13uxx
-        LPC_SYSCON->PDRUNCFG &= ~(1 << 4);  //Power up the ADC
-        LPC_SYSCON->SYSAHBCLKCTRL |= (SYSAHBCLKCTRL_ADC);
-#endif
     }
-
     adc_local[port].ref_count++;
-
     return 0;
 }
 
 int mcu_adc_close(const devfs_handle_t * handle){
     int port = handle->port;
     LPC_ADC_Type * regs = adc_regs[port];
-
     if ( adc_local[port].ref_count > 0 ){
         if ( adc_local[port].ref_count == 1 ){
             regs->CR = 0; //reset the control -- clear the PDN bit
@@ -89,16 +82,16 @@ int mcu_adc_close(const devfs_handle_t * handle){
     return 0;
 }
 
-int mcu_adc_write(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_adc_write(const devfs_handle_t * handle, devfs_async_t * async){
     errno = ENOTSUP;
     return -1;
 }
 
-int mcu_adc_read(const devfs_handle_t * handle, devfs_async_t * rop){
+int mcu_adc_read(const devfs_handle_t * handle, devfs_async_t * async){
     const int port = handle->port;
     LPC_ADC_Type * regs = adc_regs[port];
 
-    if ( (uint8_t)rop->loc > 7 ){
+    if ( (uint8_t)async->loc > 7 ){
         errno = EINVAL;
         return -1;
     }
@@ -109,18 +102,18 @@ int mcu_adc_read(const devfs_handle_t * handle, devfs_async_t * rop){
         return -1;
     }
 
-    if( cortexm_validate_callback(rop->handler.callback) < 0 ){
+    if( cortexm_validate_callback(async->handler.callback) < 0 ){
         return -1;
     }
 
-    adc_local[port].handler.callback = rop->handler.callback;
-    adc_local[port].handler.context = rop->handler.context;
-    adc_local[port].bufp = rop->buf;
-    adc_local[port].len = rop->nbyte & ~(sizeof(u32)-1);
-    rop->nbyte = adc_local[port].len;
+    adc_local[port].handler.callback = async->handler.callback;
+    adc_local[port].handler.context = async->handler.context;
+    adc_local[port].bufp = async->buf;
+    adc_local[port].len = async->nbyte & ~(sizeof(u32)-1);
+    async->nbyte = adc_local[port].len;
 
     regs->INTEN = (1<<8);
-    regs->CR |= ((1<<ADC_START)|(1<<rop->loc)); //start the first conversion
+    regs->CR |= ((1<<ADC_START)|(1<<async->loc)); //start the first conversion
 
     return 0;
 }

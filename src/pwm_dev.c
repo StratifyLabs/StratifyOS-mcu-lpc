@@ -201,10 +201,7 @@ int mcu_pwm_setattr(const devfs_handle_t * handle, void * ctl){
 		if( (o_flags & PWM_FLAG_IS_ENABLED) == 0 ){
 			regs->TCR = 0; //disable the counter
 		}
-
 	}
-
-
 	return 0;
 }
 
