@@ -45,5 +45,10 @@
 #include "mcu_lpc43xx.h"
 #endif
 
+typedef struct {
+    u32 clock_oscillator_freq;
+    u32 clock_peripheral_freq;
+} lpc_config_t;
+
 
 #endif /* LPC_ARCH_H_ */

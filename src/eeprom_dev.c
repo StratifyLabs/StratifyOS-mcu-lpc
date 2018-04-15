@@ -234,7 +234,6 @@ int mcu_eeprom_read(const devfs_handle_t * handle, devfs_async_t * rop){
         eeprom_local[port].offset = 0;
         eeprom_local[port].page++;
     }
-
     do {
         read_eeprom_halfword(port);
 
@@ -243,7 +242,7 @@ int mcu_eeprom_read(const devfs_handle_t * handle, devfs_async_t * rop){
             eeprom_local[port].page++;
         }
 
-    } while( eeprom_local[port].len > 0 );
+    } while( eeprom_local[port].len > 1 );
 
     read_eeprom_byte(port);
 
@@ -287,7 +286,8 @@ void exec_callback(int port, u32 o_flags, void * data){
 void write_eeprom_byte(int port){
     LPC_EEPROM_Type * regs = eeprom_regs[port];
 
-    if( (eeprom_local[port].len > 0) && ((eeprom_local[port].offset & 0x01) != 0) ){
+    if( (eeprom_local[port].len == 1) ||
+            ((eeprom_local[port].len > 0) && ((eeprom_local[port].offset & 0x01) != 0)) ){
         regs->ADDR = eeprom_local[port].offset | eeprom_local[port].page << 6;
         regs->CMD = 3; //8-bit write
 
@@ -325,7 +325,8 @@ void write_eeprom_halfword(int port){
 void read_eeprom_byte(int port){
     LPC_EEPROM_Type * regs = eeprom_regs[port];
 
-    if( (eeprom_local[port].len > 0) && ((eeprom_local[port].offset & 0x01) != 0) ){
+    if( (eeprom_local[port].len == 1) ||
+            ((eeprom_local[port].len > 0) && ((eeprom_local[port].offset & 0x01) != 0)) ){
         regs->ADDR = eeprom_local[port].offset | (eeprom_local[port].page << 6);
         regs->CMD = 0;
 
@@ -374,26 +375,6 @@ void mcu_core_eeprom0_isr(){
             }
 
             write_eeprom_byte(port);
-
-#if 0
-
-
-
-            regs->ADDR = eeprom_local[port].offset;
-            regs->CMD = 3;
-            do {
-                regs->WDATA = *eeprom_local[port].buf;
-                //wait until the previous data has written
-                while( (regs->INTSTAT & (1<<26)) == 0 ){
-                    ;
-                }
-                regs->INTSTATCLR = (1<<26);
-                eeprom_local[port].len--;
-                eeprom_local[port].offset++;
-                eeprom_local[port].buf++;
-            } while( (eeprom_local[port].offset < MCU_EEPROM_PAGE_SIZE) && (eeprom_local[port].len > 0) );
-
-#endif
 
             regs->ADDR = eeprom_local[port].page << 6;
             regs->CMD = 6; //erase/program page
