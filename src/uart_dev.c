@@ -234,8 +234,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const uart_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	uart_regs = uart_regs_table[port];
@@ -244,8 +243,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 	if ( attr->freq != 0 ){
 		baud_rate = attr->freq;
 	} else {
-		errno = EINVAL;
-		return -1 - offsetof(uart_attr_t, freq);
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	lcr = 0;
@@ -256,8 +254,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 
 
 	if ( (attr->width > 8) || (attr->width < 5) ){
-		errno = EINVAL;
-		return -1 - offsetof(uart_attr_t, width);
+        return SYSFS_SET_RETURN(EINVAL);
 	} else {
 		lcr |= (attr->width - 5);
 	}
@@ -274,8 +271,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 			MCU_CONFIG_PIN_ASSIGNMENT(uart_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(uart_pin_assignment_t),
             CORE_PERIPH_UART, port, 0, 0, 0) < 0 ){
-		errno = EINVAL;
-		return -1 - offsetof(uart_attr_t, pin_assignment);
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 
@@ -361,7 +357,7 @@ int mcu_uart_setaction(const devfs_handle_t * handle, void * ctl){
 	} else {
 
 		if( cortexm_validate_callback(action->handler.callback) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EPERM);
 		}
 
 		if( action->o_events & MCU_EVENT_FLAG_DATA_READY ){
@@ -417,7 +413,7 @@ int mcu_uart_get(const devfs_handle_t * handle, void * ctl){
 		*dest = uart_regs->RBR;
 		return 0;
 	}
-	return -1;
+    return SYSFS_SET_RETURN(ENODATA);
 }
 
 int mcu_uart_getall(const devfs_handle_t * handle, void * ctl){
@@ -449,8 +445,7 @@ int mcu_uart_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	uart_regs = uart_regs_table[port];
 
 	if ( uart_local[port].read.callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	//initialize the transfer
@@ -466,12 +461,11 @@ int mcu_uart_read(const devfs_handle_t * handle, devfs_async_t * rop){
 			uart_local[port].read.callback = NULL;
 			uart_local[port].rx_bufp = NULL;
 			rop->nbyte = 0;
-			errno = EAGAIN;
-			len = -1;
+            len = SYSFS_SET_RETURN(EAGAIN);;
 		} else {
 			if( cortexm_validate_callback(rop->handler.callback) < 0 ){
-				return -1;
-			}
+                return SYSFS_SET_RETURN(EPERM);
+            }
 
 			uart_local[port].read.callback = rop->handler.callback;
 			uart_local[port].read.context = rop->handler.context;
@@ -491,8 +485,7 @@ int mcu_uart_write(const devfs_handle_t * handle, devfs_async_t * wop){
 
 	//Check to see if the port is busy
 	if ( uart_local[port].write.callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if ( wop->nbyte == 0 ){
@@ -508,7 +501,7 @@ int mcu_uart_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	write_tx_data(port);
 
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	uart_local[port].write.callback = wop->handler.callback;

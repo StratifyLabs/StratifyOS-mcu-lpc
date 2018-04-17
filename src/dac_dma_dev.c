@@ -90,7 +90,7 @@ int mcu_dac_dma_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const dac_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	freq = attr->freq;
@@ -104,7 +104,7 @@ int mcu_dac_dma_setattr(const devfs_handle_t * handle, void * ctl){
 			MCU_CONFIG_PIN_ASSIGNMENT(dac_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(dac_pin_assignment_t),
             CORE_PERIPH_DAC, port, 0, 0, 0) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	clkdiv = mcu_board_config.core_periph_freq / freq;
@@ -135,7 +135,7 @@ int mcu_dac_dma_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	dac_local[port].handler.callback = action->handler.callback;
@@ -150,8 +150,7 @@ int mcu_dac_dma_get(const devfs_handle_t * handle, void * ctl){
 		channel->value = LPC_DAC->CR;
 		return 0;
 	}
-	errno = EINVAL;
-	return -1;
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_dac_dma_set(const devfs_handle_t * handle, void * ctl){
@@ -160,31 +159,26 @@ int mcu_dac_dma_set(const devfs_handle_t * handle, void * ctl){
 		LPC_DAC->CR = channel->value;
 		return 0;
 	}
-	errno = EINVAL;
-	return -1;
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_dac_dma_read(const devfs_handle_t * cfg, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_dac_dma_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	//Check to see if the DAC is busy
 	const int port = cfg->port;
 	if ( wop->loc != 0 ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if ( dac_local[port].handler.callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if( wop->nbyte == 0 ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	dac_local[port].bufp = (void * volatile)wop->buf;
@@ -194,7 +188,7 @@ int mcu_dac_dma_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 	wop->nbyte = (wop->nbyte) & ~0x3;
 
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	dac_local[port].handler.callback = wop->handler.callback;
@@ -229,7 +223,7 @@ int dac_dma_transfer(const devfs_handle_t * cfg){
 
 
 	if ( err < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	dac_local[port].len -= page_size;

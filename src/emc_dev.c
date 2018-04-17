@@ -46,8 +46,7 @@ int mcu_emc_dev_is_powered(const devfs_handle_t * handle){
 }
 
 int mcu_emc_getinfo(const devfs_handle_t * handle, void * ctl){
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_emc_setattr(const devfs_handle_t * handle, void * ctl){
@@ -57,18 +56,15 @@ int mcu_emc_setattr(const devfs_handle_t * handle, void * ctl){
 	int i;
 
 	if( attr->loc >= MCU_EMC_CHANS ){
-		errno = EINVAL;
-		return -1 - offsetof(emc_attr_t, channel);
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if( attr->pin_assign != 0 ){
-		errno = EINVAL;
-		return -1 - offsetof(emc_attr_t, pin_assign);
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if( attr->addr_width > 26 ){
-		errno = EINVAL;
-		return -1 - offsetof(emc_attr_t, addr_width);
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 
@@ -193,8 +189,7 @@ int mcu_emc_setattr(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_emc_setaction(const devfs_handle_t * handle, void * ctl){
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 #endif

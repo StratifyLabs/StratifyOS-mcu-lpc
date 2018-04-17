@@ -129,7 +129,7 @@ int mcu_i2s_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const i2s_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	u32 o_flags = attr->o_flags;
@@ -182,7 +182,7 @@ int mcu_i2s_setattr(const devfs_handle_t * handle, void * ctl){
 			MCU_CONFIG_PIN_ASSIGNMENT(i2s_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(i2s_pin_assignment_t),
             CORE_PERIPH_I2S, port, 0, 0, 0) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if( o_flags & I2S_FLAG_IS_MCK_ENABLED ){
@@ -255,7 +255,7 @@ int mcu_i2s_setaction(const devfs_handle_t * handle, void * ctl){
 		}
 
 		if( cortexm_validate_callback(action->handler.callback) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EPERM);
 		}
 
 		i2s_local[port].rx.handler.callback = action->handler.callback;
@@ -270,7 +270,7 @@ int mcu_i2s_setaction(const devfs_handle_t * handle, void * ctl){
 		}
 
 		if( cortexm_validate_callback(action->handler.callback) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EPERM);
 		}
 
 		i2s_local[port].tx.handler.callback = action->handler.callback;
@@ -339,13 +339,11 @@ int mcu_i2s_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 
 	if( i2s_regs->DAO & (1<<3) ){
 		//output is not enabled
-		errno = EIO;
-		return -1;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	if ( i2s_local[port].tx.handler.callback ){ //is tx interrupt already enabled
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if ( wop->nbyte == 0 ){
@@ -358,7 +356,7 @@ int mcu_i2s_write(const devfs_handle_t * cfg, devfs_async_t * wop){
 
 	//Check the local buffer for bytes that are immediately available
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	i2s_local[port].tx.handler.callback = wop->handler.callback;
@@ -380,13 +378,11 @@ int mcu_i2s_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 	//read from the RXFIFO
 	if( i2s_regs->DAI & (1<<3) ){
 		//input is not enabled
-		errno = EIO;
-		return -1;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	if ( i2s_local[port].rx.handler.callback ){ //is receive interrupt already enabled - another context is using the IRQ
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if ( rop->nbyte == 0 ){
@@ -410,8 +406,7 @@ int mcu_i2s_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 			i2s_local[port].rx.handler.callback = NULL;
 			i2s_local[port].rx.bufp = NULL;
 			rop->nbyte = 0; //no samples were read
-			errno = EAGAIN;
-			len = -1;
+            len = SYSFS_SET_RETURN(EAGAIN);
 		} else {
 			len = len*4; //the number of bytes is the samples * 4
 		}
@@ -419,8 +414,8 @@ int mcu_i2s_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 	} else if( len != nsamples ){
 		//for blocking operations wait until the entire buffer is read then call the callback
 		if( cortexm_validate_callback(rop->handler.callback) < 0 ){
-			return -1;
-		}
+            return SYSFS_SET_RETURN(EPERM);
+        }
 
 		i2s_local[port].rx.handler.callback = rop->handler.callback;
 		i2s_local[port].rx.handler.context = rop->handler.context;

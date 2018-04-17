@@ -125,12 +125,12 @@ int mcu_eeprom_setaction(const devfs_handle_t * handle, void * ctl){
     }
 
     if( cortexm_validate_callback(action->handler.callback) < 0 ){
-        return -1;
+        return SYSFS_SET_RETURN(EPERM);
     }
 
     eeprom_local[port].handler.callback = action->handler.callback;
     eeprom_local[port].handler.context = action->handler.context;
-    return -1;
+    return 0;
 }
 
 
@@ -142,14 +142,12 @@ int mcu_eeprom_write(const devfs_handle_t * handle, devfs_async_t * wop){
 
     //Check to see if the port is busy
     if ( eeprom_local[port].handler.callback ){
-        errno = EBUSY;
-        return -1;
+        return SYSFS_SET_RETURN(EBUSY);
     }
 
     //check for a valid wop->loc value
     if( ((wop->loc + wop->nbyte) > MCU_EEPROM_SIZE) || (wop->loc < 0) ){
-        errno = EINVAL;
-        return -1;
+        return SYSFS_SET_RETURN(EINVAL);
     }
 
     //Initialize variables
@@ -161,7 +159,7 @@ int mcu_eeprom_write(const devfs_handle_t * handle, devfs_async_t * wop){
     eeprom_local[port].offset = calc_offset(wop->loc);
 
     if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-        return -1;
+        return SYSFS_SET_RETURN(EPERM);
     }
 
     eeprom_local[port].handler.callback = wop->handler.callback;
@@ -207,8 +205,7 @@ int mcu_eeprom_read(const devfs_handle_t * handle, devfs_async_t * rop){
 
     //Check to see if the port is busy
     if ( eeprom_local[port].handler.callback ){
-        errno = EBUSY;
-        return -1;
+        return SYSFS_SET_RETURN(EBUSY);
     }
 
 
@@ -218,8 +215,7 @@ int mcu_eeprom_read(const devfs_handle_t * handle, devfs_async_t * rop){
 
     //check for a valid rop->loc value
     if( ((rop->loc + rop->nbyte) > MCU_EEPROM_SIZE) || (rop->loc < 0) ){
-        errno = EINVAL;
-        return -1;
+        return SYSFS_SET_RETURN(EINVAL);
     }
 
     //Initialize variables

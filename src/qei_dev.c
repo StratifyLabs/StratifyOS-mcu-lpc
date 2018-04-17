@@ -60,7 +60,7 @@ int mcu_qei_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const qei_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	LPC_QEI_Type * regs = qei_regs[port];
@@ -88,13 +88,11 @@ int mcu_qei_setattr(const devfs_handle_t * handle, void * ctl){
 
 
 		if ( attr->velocity_freq == 0 ){
-			errno = EINVAL;
-			return -1 - offsetof(qei_attr_t, velocity_freq);
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		if ( attr->velocity_freq > mcu_board_config.core_periph_freq ){
-			errno = EINVAL;
-			return -1 - offsetof(qei_attr_t, velocity_freq);
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		if( mcu_set_pin_assignment(
@@ -102,7 +100,7 @@ int mcu_qei_setattr(const devfs_handle_t * handle, void * ctl){
 				MCU_CONFIG_PIN_ASSIGNMENT(qei_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(qei_pin_assignment_t),
                 CORE_PERIPH_QEI, port, 0, 0, 0) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		regs->MAXPOS = attr->max_position;
@@ -150,7 +148,7 @@ int mcu_qei_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	qei_local[port].handler.callback = action->handler.callback;
@@ -165,8 +163,8 @@ int mcu_qei_setaction(const devfs_handle_t * handle, void * ctl){
 int mcu_qei_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	const int port = handle->port;
 	if( cortexm_validate_callback(rop->handler.callback) < 0 ){
-		return -1;
-	}
+        return SYSFS_SET_RETURN(EPERM);
+    }
 
 	qei_local[port].handler.callback = rop->handler.callback;
 	qei_local[port].handler.context = rop->handler.context;
@@ -195,8 +193,7 @@ int mcu_qei_getindex(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_qei_write(const devfs_handle_t * handle, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 void mcu_core_qei0_isr(){

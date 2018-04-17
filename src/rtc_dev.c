@@ -121,11 +121,11 @@ int mcu_rtc_setattr(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( set_alarm(port, attr) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	if( set_count_event(port, o_flags) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	return 0;
@@ -135,7 +135,7 @@ int mcu_rtc_setaction(const devfs_handle_t * handle, void * ctl){
 	mcu_action_t * action = (mcu_action_t*)ctl;
 	int port = handle->port;
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	rtc_local.handler = action->handler;
@@ -145,8 +145,7 @@ int mcu_rtc_setaction(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_rtc_read(const devfs_handle_t * cfg, devfs_async_t * rop){
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int set_alarm(int port, const rtc_attr_t * attr){
@@ -255,8 +254,7 @@ int mcu_rtc_get(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_rtc_write(const devfs_handle_t * handle, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 

@@ -120,8 +120,7 @@ int mcu_pwm_getinfo(const devfs_handle_t * handle, void * ctl){
 #ifdef __lpc17xx
 	int port = handle->port;
 	if( port == 0 ){
-		errno = ENODEV;
-		return -1;
+        return SYSFS_SET_RETURN(ENODEV);
 	}
 #endif
 
@@ -141,14 +140,15 @@ int mcu_pwm_setattr(const devfs_handle_t * handle, void * ctl){
 	LPC_PWM_Type * regs = pwm_regs_table[port];
 
 	const pwm_attr_t * attr = mcu_select_attr(handle, ctl);
-	if( attr == 0 ){ return -1; }
+    if( attr == 0 ){
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 
 	o_flags = attr->o_flags;
 
 #ifdef __lpc17xx
 	if( regs == 0 ){
-		errno = ENODEV;
-		return -1;
+        return SYSFS_SET_RETURN(ENODEV);
 	}
 #endif
 
@@ -229,7 +229,7 @@ int mcu_pwm_setaction(const devfs_handle_t * handle, void * ctl){
 
 
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	pwm_local[port].handler.callback = action->handler.callback;
@@ -248,15 +248,13 @@ int mcu_pwm_setchannel(const devfs_handle_t * handle, void * ctl){
 
 #ifdef __lpc17xx
 	if( regs == 0 ){
-		errno = ENODEV;
-		return -1;
+        return SYSFS_SET_RETURN(ENODEV);
 	}
 #endif
 
 	if ( regs->MCR & (1<<0) ){ //If the interrupt is enabled--the pwm is busy
 		//Device is busy and can't start a new write
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	update_pwm(port, writep->loc, writep->value);
@@ -277,8 +275,7 @@ int mcu_pwm_getchannel(const devfs_handle_t * handle, void * ctl){
 	case 5: channel->value = regs->MR5; break;
 	case 6: channel->value = regs->MR6; break;
 	default:
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	return 0;
@@ -312,8 +309,7 @@ int mcu_pwm_disable(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_pwm_read(const devfs_handle_t * handle, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_pwm_write(const devfs_handle_t * handle, devfs_async_t * wop){
@@ -322,14 +318,12 @@ int mcu_pwm_write(const devfs_handle_t * handle, devfs_async_t * wop){
 
 #ifdef __lpc17xx
 	if( regs == 0 ){
-		errno = ENODEV;
-		return -1;
+        return SYSFS_SET_RETURN(ENODEV);
 	}
 #endif
 
 	if ( pwm_local[port].handler.callback ){ //If the interrupt is enabled--the pwm is busy
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	pwm_local[port].pwm_nbyte_len = wop->nbyte >> 2;
@@ -338,7 +332,7 @@ int mcu_pwm_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	pwm_local[port].chan = wop->loc;
 
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	pwm_local[port].handler.callback = wop->handler.callback;

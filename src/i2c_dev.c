@@ -224,7 +224,7 @@ int mcu_i2c_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const i2c_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	u32 o_flags = attr->o_flags;
@@ -252,7 +252,7 @@ int mcu_i2c_setattr(const devfs_handle_t * handle, void * ctl){
 				MCU_CONFIG_PIN_ASSIGNMENT(i2c_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(i2c_pin_assignment_t),
                 CORE_PERIPH_I2C, port, enable_opendrain_pin, 0, (void*)internal_pullup) < 0 ){
-			return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		i2c_regs->CONCLR = 0xFF;
@@ -377,7 +377,7 @@ int mcu_i2c_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	i2c_local[port].slave.handler.callback = action->handler.callback;
@@ -704,8 +704,7 @@ int i2c_transfer(const devfs_handle_t * handle, int op, devfs_async_t * dop){
 	}
 
 	if ( (i2c_local[port].state != I2C_STATE_NONE) && (i2c_local[port].state != I2C_STATE_NO_STOP) ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if(i2c_local[port].state == I2C_STATE_NO_STOP){
@@ -713,8 +712,7 @@ int i2c_transfer(const devfs_handle_t * handle, int op, devfs_async_t * dop){
 	}
 
 	if( cortexm_validate_callback(dop->handler.callback) < 0 ){
-		errno = EPERM;
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	i2c_local[port].master.handler.callback = dop->handler.callback;
@@ -758,8 +756,7 @@ int i2c_transfer(const devfs_handle_t * handle, int op, devfs_async_t * dop){
 			i2c_local[port].state = I2C_STATE_START;
 		}
 	} else {
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	//If no start is set, then read write data directly

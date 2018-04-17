@@ -66,8 +66,8 @@ int mcu_flash_getpageinfo(const devfs_handle_t * handle, void * ctl){
 	size = get_page_size(ctlp->page);
 	addr = get_page_addr(ctlp->page);
 	if ( (addr + size) > (u32)&_flash_size){
-		return -1; //this page does not exist on this part
-	}
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 	ctlp->size = size;
 	ctlp->addr = addr;
 	return 0;
@@ -88,8 +88,7 @@ int mcu_flash_eraseaddr(const devfs_handle_t * handle, void * ctl){
 		err = mcu_flash_erasepage(handle, (void*)page);
 		return err;
 	}
-	errno = EROFS;
-	return -1;
+    return SYSFS_SET_RETURN(EROFS);
 }
 
 
@@ -103,16 +102,14 @@ int mcu_flash_erasepage(const devfs_handle_t * handle, void * ctl){
 
 	if ( page < last_page ){
 		//Never erase the bootloader
-		errno = EROFS;
-		return -1;
+        return SYSFS_SET_RETURN(EROFS);
 	}
 
 	addr = get_page_addr(page);
 	page_size = get_page_size(page);
 
 	if ( (addr + page_size) > (u32)&_flash_size){
-		errno = EINVAL;
-		return -1; //this page does not exist on this part
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if ( blank_check(addr, page_size) == 0 ){
@@ -123,7 +120,7 @@ int mcu_flash_erasepage(const devfs_handle_t * handle, void * ctl){
 	err = mcu_lpc_flash_erase_page((u32)ctl);
 	cortexm_enable_interrupts(NULL);
 	if ( err < 0 ){
-		errno = EIO;
+        err = SYSFS_SET_RETURN(EIO);
 	}
 	return err;
 }
@@ -157,12 +154,11 @@ int mcu_flash_writepage(const devfs_handle_t * handle, void * ctl){
 
 
 	if ( wattr->addr < boot_page_addr ){
-		errno = EROFS;
-		return -1;
+        return SYSFS_SET_RETURN(EROFS);
 	}
 
 	if ( wattr->addr >= (u32)&_flash_size ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if ( wattr->addr + wattr->nbyte > (u32)&_flash_size ){
@@ -181,15 +177,13 @@ int mcu_flash_writepage(const devfs_handle_t * handle, void * ctl){
 
 
 	if ( blank_check(wattr->addr,  nbyte) ){
-		errno = EROFS;
-		return -1;
+        return SYSFS_SET_RETURN(EROFS);
 	}
 
 
 	err = mcu_lpc_flash_write_page(get_page((void*)wattr->addr), (void*)wattr->addr, wattr->buf, nbyte);
 	if( err < 0 ){
-		errno = EIO;
-		return -1;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	return wattr->nbyte;
@@ -197,14 +191,13 @@ int mcu_flash_writepage(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_flash_write(const devfs_handle_t * cfg, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_flash_read(const devfs_handle_t * cfg, devfs_async_t * rop){
 
 	if ( rop->loc >= (u32)&_flash_size ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if ( rop->loc + rop->nbyte > (u32)&_flash_size ){

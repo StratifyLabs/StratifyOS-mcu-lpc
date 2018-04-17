@@ -154,8 +154,8 @@ int mcu_usb_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const usb_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
-	}
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 	u32 o_flags = attr->o_flags;
 
 	if( o_flags & USB_FLAG_SET_DEVICE ){
@@ -175,7 +175,7 @@ int mcu_usb_setattr(const devfs_handle_t * handle, void * ctl){
 				MCU_CONFIG_PIN_ASSIGNMENT(usb_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(usb_pin_assignment_t),
                 CORE_PERIPH_USB, port, configure_pin, 0, 0) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 #ifdef LPCXX7X_8X
@@ -226,9 +226,6 @@ int mcu_usb_setattr(const devfs_handle_t * handle, void * ctl){
 		usb_configure_endpoint(handle, attr->address, attr->max_packet_size);
 	}
 
-
-
-
 	return 0;
 }
 
@@ -269,8 +266,8 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 		if( action->o_events & MCU_EVENT_FLAG_DATA_READY ){
 			//cortexm_enable_interrupts(NULL);
 			if( cortexm_validate_callback(action->handler.callback) < 0 ){
-				return -1;
-			}
+                return SYSFS_SET_RETURN(EPERM);
+            }
 
 			usb_local.read[log_ep].callback = action->handler.callback;
 			usb_local.read[log_ep].context = action->handler.context;
@@ -279,8 +276,8 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 
 		if( action->o_events & MCU_EVENT_FLAG_WRITE_COMPLETE ){
 			if( cortexm_validate_callback(action->handler.callback) < 0 ){
-				return -1;
-			}
+                return SYSFS_SET_RETURN(EPERM);
+            }
 
 			usb_local.write[log_ep].callback = action->handler.callback;
 			usb_local.write[log_ep].context = action->handler.context;
@@ -289,7 +286,7 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( ret < 0 ){
-		errno = EINVAL;
+        ret = SYSFS_SET_RETURN(EINVAL);
 	}
 	return ret;
 }
@@ -299,33 +296,30 @@ int mcu_usb_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	int loc = rop->loc;
 
 	if ( loc > (DEV_USB_LOGICAL_ENDPOINT_COUNT-1) ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if( usb_local.read[loc].callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	//Synchronous read (only if data is ready) otherwise 0 is returned
 	if ( usb_local.read_ready & (1<<loc) ){
 		usb_local.read_ready &= ~(1<<loc);  //clear the read ready bit
-		ret = mcu_usb_root_read_endpoint(0, loc, rop->buf);
+        ret = mcu_usb_root_read_endpoint(handle, loc, rop->buf);
 	} else {
 		rop->nbyte = 0;
 		if ( !(rop->flags & O_NONBLOCK) ){
 			//If this is a blocking call, set the callback and context
 			if( cortexm_validate_callback(rop->handler.callback) < 0 ){
-				return -1;
+                return SYSFS_SET_RETURN(EPERM);
 			}
 
 			usb_local.read[loc].callback = rop->handler.callback;
 			usb_local.read[loc].context = rop->handler.context;
 			ret = 0;
 		} else {
-			errno = EAGAIN;
-			ret = -1;
+            ret = SYSFS_SET_RETURN(EAGAIN);
 		}
 	}
 
@@ -341,19 +335,17 @@ int mcu_usb_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	ep = (loc & 0x7F);
 
 	if ( ep > (DEV_USB_LOGICAL_ENDPOINT_COUNT-1) ){
-		errno = EINVAL;
-		return -1;
-	}
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 
 	if ( usb_local.write[ep].callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	usb_local.write_pending |= (1<<ep);
 
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	usb_local.write[ep].callback = wop->handler.callback;
@@ -366,7 +358,7 @@ int mcu_usb_write(const devfs_handle_t * handle, devfs_async_t * wop){
 		usb_reset_endpoint(handle, loc );
 		usb_enable_endpoint(handle, loc );
 		usb_local.write_pending &= ~(1<<ep);
-		return -2;
+        return SYSFS_SET_RETURN(EIO);
 	}
 
 	return 0;

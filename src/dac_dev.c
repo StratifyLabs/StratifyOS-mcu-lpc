@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Stratify OS.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * 
+ *
+ *
  */
 
 #include <mcu/dma.h>
@@ -32,11 +32,11 @@
 #define DAC_DMA_CHAN 5
 
 typedef struct {
-	mcu_event_handler_t handler;
-	volatile int len;
-	void * volatile bufp;
-	uint8_t enabled_channels;
-	uint8_t ref_count;
+    mcu_event_handler_t handler;
+    volatile int len;
+    void * volatile bufp;
+    uint8_t enabled_channels;
+    uint8_t ref_count;
 } dac_local_t;
 
 static dac_local_t dac_local[MCU_DAC_PORTS] MCU_SYS_MEM;
@@ -51,159 +51,153 @@ static void exec_callback(int port, u32 o_events);
 DEVFS_MCU_DRIVER_IOCTL_FUNCTION(dac, DAC_VERSION, I_MCU_TOTAL + I_DAC_TOTAL, mcu_dac_get, mcu_dac_set)
 
 int mcu_dac_open(const devfs_handle_t * handle){
-	int port = handle->port;
-	if ( dac_local[port].ref_count == 0 ){
-		dac_local[port].ref_count++;
-		memset(&dac_local, 0, sizeof(dac_local_t));
-	}
+    int port = handle->port;
+    if ( dac_local[port].ref_count == 0 ){
+        dac_local[port].ref_count++;
+        memset(&dac_local, 0, sizeof(dac_local_t));
+    }
 
-	dac_local[port].ref_count++;
+    dac_local[port].ref_count++;
     return 0;
 }
 
 int mcu_dac_close(const devfs_handle_t * handle){
-	int port = handle->port;
-	if ( dac_local[port].ref_count > 0 ){
-		if ( dac_local[port].ref_count == 1 ){
-			mcu_pin_t pin = mcu_pin(0,26);
-			mcu_core_set_pinsel_func(&pin,CORE_PERIPH_PIO,0);
-		}
-		dac_local[port].ref_count--;
-	}
+    int port = handle->port;
+    if ( dac_local[port].ref_count > 0 ){
+        if ( dac_local[port].ref_count == 1 ){
+            mcu_pin_t pin = mcu_pin(0,26);
+            mcu_core_set_pinsel_func(&pin,CORE_PERIPH_PIO,0);
+        }
+        dac_local[port].ref_count--;
+    }
     return 0;
 }
 
 int mcu_dac_getinfo(const devfs_handle_t * handle, void * ctl){
-	dac_info_t * info = ctl;
-	info->o_flags = 0;
-	info->freq = DAC_MAX_FREQ;
-	return 0;
+    dac_info_t * info = ctl;
+    info->o_flags = 0;
+    info->freq = DAC_MAX_FREQ;
+    return 0;
 }
 
 int mcu_dac_setattr(const devfs_handle_t * handle, void * ctl){
-	int port = handle->port;
-	u32 freq;
-	int clkdiv;
+    int port = handle->port;
+    u32 freq;
+    int clkdiv;
 
-	const dac_attr_t * attr = mcu_select_attr(handle, ctl);
-	if( attr == 0 ){
-		return -1;
-	}
+    const dac_attr_t * attr = mcu_select_attr(handle, ctl);
+    if( attr == 0 ){
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 
-	freq = attr->freq;
-	if( (attr->freq == 0) || (attr->freq > DAC_MAX_FREQ) ){
-		freq = DAC_MAX_FREQ;
-	}
+    freq = attr->freq;
+    if( (attr->freq == 0) || (attr->freq > DAC_MAX_FREQ) ){
+        freq = DAC_MAX_FREQ;
+    }
 
 
-	if( mcu_set_pin_assignment(
-			&(attr->pin_assignment),
-			MCU_CONFIG_PIN_ASSIGNMENT(dac_config_t, handle),
-			MCU_PIN_ASSIGNMENT_COUNT(dac_pin_assignment_t),
-            CORE_PERIPH_DAC, port, 0, 0, 0) < 0 ){
-		return -1;
-	}
+    if( mcu_set_pin_assignment(
+                &(attr->pin_assignment),
+                MCU_CONFIG_PIN_ASSIGNMENT(dac_config_t, handle),
+                MCU_PIN_ASSIGNMENT_COUNT(dac_pin_assignment_t),
+                CORE_PERIPH_DAC, port, 0, 0, 0) < 0 ){
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 
-	clkdiv = mcu_board_config.core_periph_freq / freq;
-	if ( clkdiv > ((1<<16)-1) ){
-		clkdiv = ((1<<16)-1);
-	} else if ( clkdiv < 1 ){
-		clkdiv = 1;
-	}
+    clkdiv = mcu_board_config.core_periph_freq / freq;
+    if ( clkdiv > ((1<<16)-1) ){
+        clkdiv = ((1<<16)-1);
+    } else if ( clkdiv < 1 ){
+        clkdiv = 1;
+    }
 
 #ifdef LPCXX7X_8X
-	LPC_IOCON->P0_26 = 0x02 | (1<<16); //Enable the DAC pin
+    LPC_IOCON->P0_26 = 0x02 | (1<<16); //Enable the DAC pin
 #endif
 
-	LPC_DAC->CNTVAL = clkdiv;
+    LPC_DAC->CNTVAL = clkdiv;
 
-	return 0;
+    return 0;
 }
 
 int mcu_dac_setaction(const devfs_handle_t * handle, void * ctl){
-	int port = handle->port;
-	mcu_action_t * action = (mcu_action_t*)ctl;
-	if( action->handler.callback == 0 ){
-		if ( LPC_GPDMA->ENBLDCHNS & (1<<DAC_DMA_CHAN) ){
-			exec_callback(port, MCU_EVENT_FLAG_CANCELED);
-		}
-	}
+    int port = handle->port;
+    mcu_action_t * action = (mcu_action_t*)ctl;
+    if( action->handler.callback == 0 ){
+        if ( LPC_GPDMA->ENBLDCHNS & (1<<DAC_DMA_CHAN) ){
+            exec_callback(port, MCU_EVENT_FLAG_CANCELED);
+        }
+    }
 
-	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
-	}
+    if( cortexm_validate_callback(action->handler.callback) < 0 ){
+        return SYSFS_SET_RETURN(EPERM);
+    }
 
-	dac_local[port].handler.callback = action->handler.callback;
-	dac_local[port].handler.context = action->handler.context;
+    dac_local[port].handler.callback = action->handler.callback;
+    dac_local[port].handler.context = action->handler.context;
 
-	return 0;
+    return 0;
 }
 
 int mcu_dac_get(const devfs_handle_t * handle, void * ctl){
-	mcu_channel_t * channel = ctl;
-	if( channel->loc == 0 ){
-		channel->value = LPC_DAC->CR;
-		return 0;
-	}
-	errno = EINVAL;
-	return -1;
+    mcu_channel_t * channel = ctl;
+    if( channel->loc == 0 ){
+        channel->value = LPC_DAC->CR;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_dac_set(const devfs_handle_t * handle, void * ctl){
-	mcu_channel_t * channel = ctl;
-	if( channel->loc == 0 ){
-		LPC_DAC->CR = channel->value;
-		return 0;
-	}
-	errno = EINVAL;
-	return -1;
+    mcu_channel_t * channel = ctl;
+    if( channel->loc == 0 ){
+        LPC_DAC->CR = channel->value;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_dac_read(const devfs_handle_t * cfg, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_dac_write(const devfs_handle_t * cfg, devfs_async_t * wop){
-	//Check to see if the DAC is busy
+    //Check to see if the DAC is busy
 #if defined __lpc43xx
-	const int port = cfg->port;
-	if ( wop->loc != 0 ){
-		errno = EINVAL;
-		return -1;
-	}
+    const int port = cfg->port;
+    if ( wop->loc != 0 ){
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 
-	if( wop->nbyte == 0 ){
-		errno = EINVAL;
-		return -1;
-	}
+    if( wop->nbyte == 0 ){
+        return SYSFS_SET_RETURN(EINVAL);
+    }
 
-	//LPC43xx had a dedicated DAC interrupt
-	dac_local[port].bufp = (void * volatile)wop->buf;
-	dac_local[port].len = (wop->nbyte) >> 2;
-	//dac_dma_transfer(cfg);
-	//LPC_DAC->CTRL = DAC_CTRL_DMA_ENA|DAC_CTRL_CNT_ENA|DAC_CTRL_DBUF_ENA;
-	wop->nbyte = (wop->nbyte) & ~0x3;
+    //LPC43xx had a dedicated DAC interrupt
+    dac_local[port].bufp = (void * volatile)wop->buf;
+    dac_local[port].len = (wop->nbyte) >> 2;
+    //dac_dma_transfer(cfg);
+    //LPC_DAC->CTRL = DAC_CTRL_DMA_ENA|DAC_CTRL_CNT_ENA|DAC_CTRL_DBUF_ENA;
+    wop->nbyte = (wop->nbyte) & ~0x3;
 
-	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
-	}
+    if( cortexm_validate_callback(wop->handler.callback) < 0 ){
+        return SYSFS_SET_RETURN(EPERM);
+    }
 
-	dac_local[port].handler.callback = wop->handler.callback;
-	dac_local[port].handler.context = wop->handler.context;
+    dac_local[port].handler.callback = wop->handler.callback;
+    dac_local[port].handler.context = wop->handler.context;
 
-	return 0;
+    return 0;
 #else
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 #endif
 }
 
 void exec_callback(int port, u32 o_events){
-	dac_local[port].bufp = NULL;
-	//call the signal callback
-	LPC_DAC->CTRL = 0;
-	mcu_execute_event_handler(&(dac_local[port].handler), o_events, 0);
+    dac_local[port].bufp = NULL;
+    //call the signal callback
+    LPC_DAC->CTRL = 0;
+    mcu_execute_event_handler(&(dac_local[port].handler), o_events, 0);
 }
 
 
@@ -211,21 +205,21 @@ void exec_callback(int port, u32 o_events){
 #if defined __lpc43xx
 
 int write_complete(void * context){
-	const devfs_handle_t * cfg = context;
-	const int port = cfg->port;
-	if ( dac_local[port].len ){
-		//dac_dma_transfer(cfg);
-		return 1; //keep interrupt in place
-	} else {
-		exec_callback(port, MCU_EVENT_FLAG_WRITE_COMPLETE);
-	}
-	return 0;
+    const devfs_handle_t * cfg = context;
+    const int port = cfg->port;
+    if ( dac_local[port].len ){
+        //dac_dma_transfer(cfg);
+        return 1; //keep interrupt in place
+    } else {
+        exec_callback(port, MCU_EVENT_FLAG_WRITE_COMPLETE);
+    }
+    return 0;
 }
 
 //when not using DMA -- use dedicated interrupt
 void mcu_core_dac0_isr(){
 
-	write_complete(dac_local[0].handler.context);
+    write_complete(dac_local[0].handler.context);
 }
 
 

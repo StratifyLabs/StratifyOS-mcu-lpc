@@ -89,7 +89,7 @@ int mcu_spi_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const spi_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	u32 o_flags = attr->o_flags;
@@ -98,13 +98,11 @@ int mcu_spi_setattr(const devfs_handle_t * handle, void * ctl){
 	if( o_flags & SPI_FLAG_SET_MASTER ){
 
 		if( attr->freq == 0 ){
-			errno = EINVAL;
-			return -1 - offsetof(spi_attr_t, freq);
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		if( attr->width > 8 ){
-			errno = EINVAL;
-			return -1 - offsetof(spi_attr_t, width);
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		mode = 0;
@@ -135,8 +133,7 @@ int mcu_spi_setattr(const devfs_handle_t * handle, void * ctl){
 		if ( (attr->width >= 8) && (attr->width <= 16) ){
 			cr0 |= (( attr->width & 0x0F ) << 8);
 		} else {
-			errno = EINVAL;
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		if( mcu_set_pin_assignment(
@@ -144,7 +141,7 @@ int mcu_spi_setattr(const devfs_handle_t * handle, void * ctl){
 				MCU_CONFIG_PIN_ASSIGNMENT(spi_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(spi_pin_assignment_t),
                 CORE_PERIPH_SPI, port, 0, 0, 0) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 		regs->CCR = cpsr & 0xFE;
@@ -244,8 +241,7 @@ int spi_port_transfer(const devfs_handle_t * handle, int is_read, devfs_async_t 
 	size = dop->nbyte;
 
 	if ( spi_local[port].handler.callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if ( size == 0 ){

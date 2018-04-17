@@ -47,7 +47,7 @@ int mcu_wdt_init(int mode, int interval){
 		LPC_WDT->CLKSEL = 2;
 		break;
 	default:
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	//Lock the clock source

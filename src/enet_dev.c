@@ -91,7 +91,7 @@ int mcu_enet_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const enet_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	LPC_EMAC_Type * regs = enet_regs_table[port];
@@ -122,8 +122,7 @@ int mcu_enet_setattr(const devfs_handle_t * handle, void * ctl){
 	} else {
 #ifdef __lpc17xx
 		//LPC17xx must use RMII
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 #else
 		regs->Command = ENET_COMMAND_FULLDUPLEX | ENET_COMMAND_PASSRUNTFRAME;
 #endif
@@ -175,8 +174,7 @@ int mcu_enet_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	int port = handle->port;
 
 	if( enet_local[port].read.callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if( rop->nbyte == 0 ){
@@ -188,7 +186,7 @@ int mcu_enet_read(const devfs_handle_t * handle, devfs_async_t * rop){
 	enet_local[port].rx_desc.buf = rop->buf;
 	enet_local[port].rx_desc.ctrl = ENET_RCTRL_SIZE(rop->nbyte) | ENET_RCTRL_INT;
 	if( cortexm_validate_callback(rop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	enet_local[port].read.callback = rop->handler.callback;
@@ -216,8 +214,7 @@ int mcu_enet_write(const devfs_handle_t * handle, devfs_async_t * wop){
 
 
 	if( enet_local[port].write.callback ){
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 
 	if( wop->nbyte == 0 ){
@@ -230,7 +227,7 @@ int mcu_enet_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	enet_local[port].tx_desc.ctrl = ENET_TCTRL_SIZE(wop->nbyte) | ENET_TCTRL_LAST | ENET_TCTRL_INT;
 
 	if( cortexm_validate_callback(wop->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	enet_local[port].write.callback = wop->handler.callback;

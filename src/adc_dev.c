@@ -83,8 +83,7 @@ int mcu_adc_close(const devfs_handle_t * handle){
 }
 
 int mcu_adc_write(const devfs_handle_t * handle, devfs_async_t * async){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_adc_read(const devfs_handle_t * handle, devfs_async_t * async){
@@ -92,18 +91,16 @@ int mcu_adc_read(const devfs_handle_t * handle, devfs_async_t * async){
     LPC_ADC_Type * regs = adc_regs[port];
 
     if ( (uint8_t)async->loc > 7 ){
-        errno = EINVAL;
-        return -1;
+        return SYSFS_SET_RETURN(EINVAL);
     }
 
     if ( adc_local[port].handler.callback ){
         //The interrupt is on -- port is busy
-        errno = EBUSY;
-        return -1;
+        return SYSFS_SET_RETURN(EBUSY);
     }
 
     if( cortexm_validate_callback(async->handler.callback) < 0 ){
-        return -1;
+        return SYSFS_SET_RETURN(EPERM);
     }
 
     adc_local[port].handler.callback = async->handler.callback;
@@ -172,7 +169,7 @@ int mcu_adc_setattr(const devfs_handle_t * handle, void * ctl){
 
     const adc_attr_t * attr = mcu_select_attr(handle, ctl);
     if( attr == 0 ){
-        return -1;
+        return SYSFS_SET_RETURN(EINVAL);
     }
 
     freq = attr->freq;
@@ -188,7 +185,7 @@ int mcu_adc_setattr(const devfs_handle_t * handle, void * ctl){
                 MCU_CONFIG_PIN_ASSIGNMENT(adc_config_t, handle),
                 MCU_PIN_ASSIGNMENT_COUNT(adc_pin_assignment_t),
                 CORE_PERIPH_ADC, port, enable_pin, 0, 0) < 0 ){
-        return -1;
+        return SYSFS_SET_RETURN(EINVAL);
     }
 
 
@@ -221,7 +218,7 @@ int mcu_adc_setaction(const devfs_handle_t * handle, void * ctl){
     }
 
     if( cortexm_validate_callback(action->handler.callback) < 0 ){
-        return -1;
+        return SYSFS_SET_RETURN(EPERM);
     }
 
     adc_local[port].handler.callback = action->handler.callback;

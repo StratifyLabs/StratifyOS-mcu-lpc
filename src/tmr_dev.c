@@ -141,7 +141,7 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const tmr_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	u32 o_flags = attr->o_flags;
@@ -154,8 +154,7 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 
 			if( o_flags & TMR_FLAG_IS_SOURCE_CPU ){
 				if( attr->freq == 0 ){
-					errno = EINVAL;
-					return -1 - offsetof(tmr_attr_t, freq);
+                    return SYSFS_SET_RETURN(EINVAL);
 				}
 			} else {
 				ctcr = 1; //default on the rising edge
@@ -219,8 +218,9 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 			}
 		}
 
-		if( mcu_tmr_setchannel(handle, (void*)&attr->channel) < 0 ){
-			return -1;
+        int ret;
+        if( (ret = mcu_tmr_setchannel(handle, (void*)&attr->channel)) < 0 ){
+            return ret;
 		}
 	}
 
@@ -231,7 +231,7 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 				MCU_CONFIG_PIN_ASSIGNMENT(tmr_config_t, handle),
 				MCU_PIN_ASSIGNMENT_COUNT(tmr_pin_assignment_t),
                 CORE_PERIPH_TMR, port, 0, 0, 0) < 0 ){
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 	}
 
@@ -265,8 +265,7 @@ int mcu_tmr_setchannel(const devfs_handle_t * handle, void * ctl){
 	if( req->loc & MCU_CHANNEL_FLAG_IS_INPUT ){
 		chan = req->loc & ~MCU_CHANNEL_FLAG_IS_INPUT;
 		if ( chan > 1 ){
-			errno = EINVAL;
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 #if MCU_TMR_API == 1
 		regs->CR[chan] = req->value;
@@ -277,8 +276,7 @@ int mcu_tmr_setchannel(const devfs_handle_t * handle, void * ctl){
 	} else {
 
 		if ( req->loc > 3 ){
-			errno = EINVAL;
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 
 #if MCU_TMR_API == 1
@@ -301,8 +299,7 @@ int mcu_tmr_getchannel(const devfs_handle_t * handle, void * ctl){
 	if( req->loc & MCU_CHANNEL_FLAG_IS_INPUT ){
 		chan = req->loc & ~MCU_CHANNEL_FLAG_IS_INPUT;
 		if ( chan > 1 ){
-			errno = EINVAL;
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 #if MCU_TMR_API == 1
 		req->value = regs->CR[chan];
@@ -311,8 +308,7 @@ int mcu_tmr_getchannel(const devfs_handle_t * handle, void * ctl){
 #endif
 	} else {
 		if ( req->loc > 3 ){
-			errno = EINVAL;
-			return -1;
+            return SYSFS_SET_RETURN(EINVAL);
 		}
 #if MCU_TMR_API == 1
 		req->value = regs->MR[req->loc];
@@ -324,8 +320,7 @@ int mcu_tmr_getchannel(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_tmr_write(const devfs_handle_t * handle, devfs_async_t * wop){
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 
@@ -358,8 +353,7 @@ int mcu_tmr_setaction(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_tmr_read(const devfs_handle_t * handle, devfs_async_t * rop){
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_tmr_set(const devfs_handle_t * handle, void * ctl){

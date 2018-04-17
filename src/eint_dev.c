@@ -69,8 +69,7 @@ int mcu_eint_close(const devfs_handle_t * handle){
 }
 
 int mcu_eint_read(const devfs_handle_t * handle, devfs_async_t * wop){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_eint_write(const devfs_handle_t * handle, devfs_async_t * wop){
@@ -79,12 +78,10 @@ int mcu_eint_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	port = handle->port;
 	if ( eint_local[port].handler.callback != 0 ){
 		//The interrupt is on -- port is busy
-		errno = EBUSY;
-		return -1;
+        return SYSFS_SET_RETURN(EBUSY);
 	}
 	if( wop->nbyte != sizeof(mcu_action_t) ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	action = (mcu_action_t*)wop->buf;
@@ -102,7 +99,7 @@ int mcu_eint_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return -1;
+        return SYSFS_SET_RETURN(EPERM);
 	}
 
 	eint_local[port].handler.callback = action->handler.callback;
@@ -128,8 +125,7 @@ int mcu_eint_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const eint_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	reset_eint_port(port);
@@ -141,8 +137,7 @@ int mcu_eint_setattr(const devfs_handle_t * handle, void * ctl){
 			MCU_CONFIG_PIN_ASSIGNMENT(eint_config_t, handle),
 			MCU_PIN_ASSIGNMENT_COUNT(eint_pin_assignment_t),
             CORE_PERIPH_EINT, port, configure_pin, 0, &pattr) < 0 ){
-		errno = EINVAL;
-		return -1 - offsetof(eint_attr_t, pin_assignment);
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	return 0;

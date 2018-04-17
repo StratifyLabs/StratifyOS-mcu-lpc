@@ -164,8 +164,7 @@ static int mcu_core_initclock_dev(int fclk, int fosc, u8 clk_src, int pdiv){
 		sel1 = PCLKSEL1_ALL_8;
 		break;
 	default:
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	set_flash_timing(fclk);
@@ -275,8 +274,7 @@ int mcu_core_initclock(int div){
 #endif
 		break;
 	default:
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	//validate pdiv
@@ -292,8 +290,7 @@ int mcu_core_initclock(int div){
 #endif
 		break;
 	default:
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if( fosc == 0 ){

@@ -106,8 +106,7 @@ int mcu_mci_setattr(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( attr->pin_assign > 3 ){
-		errno = EINVAL;
-		return (-1 - offsetof(mci_attr_t, pin_assign));
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	if( attr->mode & (MCI_MODE_WIDEBUS) ){

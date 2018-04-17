@@ -57,8 +57,7 @@ int mcu_core_setattr(const devfs_handle_t * handle, void * arg){
 	core_attr_t * attr = arg;
 
 	if( attr == 0 ){
-		errno = EINVAL;
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	u32 o_flags = attr->o_flags;
@@ -91,8 +90,7 @@ int mcu_core_setattr(const devfs_handle_t * handle, void * arg){
 }
 
 int mcu_core_setaction(const devfs_handle_t * handle, void * arg){
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_core_execsleep(int port, void * arg){
@@ -141,8 +139,7 @@ int mcu_core_setclkdivide(const devfs_handle_t * handle, void * arg){
 
 #ifdef __lpc17xx
 	//the errata on the LPC17xx chips prevent this from working correctly
-	errno = ENOTSUP;
-	return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 #endif
 
 #ifdef LPCXX7X_8X
@@ -243,7 +240,7 @@ int enable_clock_out(int o_flags, int div){
 	} else if( o_flags & CORE_FLAG_IS_CLKOUT_RTC ){
 		LPC_SC->CLKOUTCFG = (1<<8)|(div<<4)|(4<<0);
 	} else {
-		return -1;
+        return SYSFS_SET_RETURN(EINVAL);
 	}
 #endif
 
@@ -271,11 +268,9 @@ void mcu_core_get_bootloader_api(void * args){
 }
 
 int mcu_core_read(const devfs_handle_t * handle, devfs_async_t * rop){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_core_write(const devfs_handle_t * handle, devfs_async_t * rop){
-    errno = ENOTSUP;
-    return -1;
+    return SYSFS_SET_RETURN(ENOTSUP);
 }
