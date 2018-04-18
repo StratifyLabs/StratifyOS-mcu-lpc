@@ -328,8 +328,13 @@ int mcu_pio_clrmask(const devfs_handle_t * handle, void * ctl){
 
 int mcu_pio_get(const devfs_handle_t * handle, void * ctl){
     int port = handle->port;
+    u32 * value = ctl;
     LPC_GPIO_Type * gpio_regs = (LPC_GPIO_Type *)LPC_GPIO0_BASE;
-    return gpio_regs[port].PIN;
+    if( value ){
+        *value = gpio_regs[port].PIN;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_pio_set(const devfs_handle_t * handle, void * ctl){

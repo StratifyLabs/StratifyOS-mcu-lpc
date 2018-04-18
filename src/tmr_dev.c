@@ -367,8 +367,13 @@ int mcu_tmr_set(const devfs_handle_t * handle, void * ctl){
 int mcu_tmr_get(const devfs_handle_t * handle, void * ctl){
 	LPC_TIM_Type * regs;
 	int port = handle->port;
-	regs = tmr_regs_table[port];
-	return regs->TC;
+    u32 * value = ctl;
+    if( value ){
+        regs = tmr_regs_table[port];
+        *value = regs->TC;
+        return SYSFS_RETURN_SUCCESS;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 static void tmr_isr(int port); //This is speed optimized

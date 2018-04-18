@@ -173,23 +173,35 @@ int mcu_qei_read(const devfs_handle_t * handle, devfs_async_t * rop){
 
 int mcu_qei_get(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
+    u32 * value = ctl;
 	LPC_QEI_Type * regs = qei_regs[port];
-
-	return regs->POS;
+    if( value ){
+        *value = regs->POS;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_qei_getvelocity(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
 	LPC_QEI_Type * regs = qei_regs[port];
-
-	return regs->CAP;
+    u32 * value = ctl;
+    if( value ){
+        *value = regs->CAP;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_qei_getindex(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
 	LPC_QEI_Type * regs = qei_regs[port];
-
-	return regs->INXCNT;
+    u32 * value = ctl;
+    if( value ){
+        *value = regs->INXCNT;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_qei_write(const devfs_handle_t * handle, devfs_async_t * async){

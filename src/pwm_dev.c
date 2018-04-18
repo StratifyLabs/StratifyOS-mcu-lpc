@@ -290,8 +290,13 @@ int mcu_pwm_set(const devfs_handle_t * handle, void * ctl){
 
 int mcu_pwm_get(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
+    u32 * value = ctl;
 	LPC_PWM_Type * regs = pwm_regs_table[port];
-	return regs->TC;
+    if( value ){
+        *value = regs->TC;
+        return 0;
+    }
+    return SYSFS_SET_RETURN(EINVAL);
 }
 
 int mcu_pwm_enable(const devfs_handle_t * handle, void * ctl){
