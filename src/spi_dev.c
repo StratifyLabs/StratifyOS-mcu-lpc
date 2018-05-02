@@ -51,7 +51,7 @@ int mcu_spi_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( spi_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCSPI);
-		cortexm_enable_irq((void*)(u32)(spi_irqs[port]));
+		cortexm_enable_irq(spi_irqs[port]);
 		spi_local[port].duplex_mem = NULL;
 		spi_local[port].handler.callback = NULL;
 	}
@@ -63,7 +63,7 @@ int mcu_spi_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( spi_local[port].ref_count > 0 ){
 		if ( spi_local[port].ref_count == 1 ){
-			cortexm_disable_irq((void*)(u32)(spi_irqs[port]));
+			cortexm_disable_irq(spi_irqs[port]);
 			mcu_lpc_core_disable_pwr(PCSPI);
 		}
 		spi_local[port].ref_count--;
@@ -179,7 +179,7 @@ int mcu_spi_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	spi_local[port].handler = action->handler;
-	cortexm_set_irq_prio(spi_irqs[port], action->prio);
+	cortexm_set_irq_priority(spi_irqs[port], action->prio);
 	return 0;
 }
 

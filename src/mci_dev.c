@@ -57,7 +57,7 @@ int mcu_mci_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( mci_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCMCI);
-		cortexm_enable_irq((void*)MCI_IRQn);
+        cortexm_enable_irq(MCI_IRQn);
 		mci_local[port].handler.callback = NULL;
 	}
 	mci_local[port].ref_count++;
@@ -68,7 +68,7 @@ int mcu_mci_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( mci_local[port].ref_count > 0 ){
 		if ( mci_local[port].ref_count == 1 ){
-			cortexm_disable_irq((void*)MCI_IRQn);
+            cortexm_disable_irq(MCI_IRQn);
 			mcu_lpc_core_enable_pwr(PCMCI);
 		}
 		mci_local[port].ref_count--;

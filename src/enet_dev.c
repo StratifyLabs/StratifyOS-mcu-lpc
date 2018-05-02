@@ -53,7 +53,7 @@ int mcu_enet_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( enet_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCENET);
-		cortexm_enable_irq((void*)(u32)(enet_irqs[port]));
+		cortexm_enable_irq(enet_irqs[port]);
 		enet_local[port].tx_desc.buf = NULL;
 		enet_local[port].rx_desc.buf = NULL;
 	}
@@ -66,7 +66,7 @@ int mcu_enet_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( enet_local[port].ref_count > 0 ){
 		if ( enet_local[port].ref_count == 1 ){
-			cortexm_disable_irq((void*)(u32)(enet_irqs[port]));
+			cortexm_disable_irq(enet_irqs[port]);
 			mcu_lpc_core_disable_pwr(PCENET);
 			enet_local[port].tx_desc.buf = NULL;
 			enet_local[port].rx_desc.buf = NULL;

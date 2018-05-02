@@ -132,7 +132,7 @@ int mcu_usb_open(const devfs_handle_t * handle){
 int mcu_usb_close(const devfs_handle_t * handle){
 	if ( usb_local.ref_count > 0 ){
 		if ( usb_local.ref_count == 1 ){
-			cortexm_disable_irq((void*)(USB_IRQn));  //Enable the USB interrupt
+			cortexm_disable_irq((USB_IRQn));  //Enable the USB interrupt
 			LPC_USB->USBClkCtrl = 0x0; //turn off dev clk en and AHB clk en
 			while( LPC_USB->USBClkCtrl != 0 ){}
 			mcu_lpc_core_disable_pwr(PCUSB);
@@ -185,7 +185,7 @@ int mcu_usb_setattr(const devfs_handle_t * handle, void * ctl){
 
 		usb_irq_mask = DEV_STAT_INT | EP_FAST_INT | EP_SLOW_INT;
 
-		cortexm_enable_irq((void*)USB_IRQn);  //Enable the USB interrupt
+		cortexm_enable_irq(USB_IRQn);  //Enable the USB interrupt
 		usb_reset(handle);
 		usb_local.address = 0;
 		usb_set_address(handle,0);
@@ -238,7 +238,7 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 	int log_ep;
 	int ret = -1;
 
-	cortexm_set_irq_prio(USB_IRQn, action->prio);
+	cortexm_set_irq_priority(USB_IRQn, action->prio);
 	log_ep = action->channel & ~0x80;
 
 	if( action->o_events &

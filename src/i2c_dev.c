@@ -156,7 +156,7 @@ int mcu_i2c_open(const devfs_handle_t * handle){
 		}
 		memset(&(i2c_local[port].master), 0, sizeof(i2c_local_transfer_t));
 		memset(&(i2c_local[port].slave), 0, sizeof(i2c_local_slave_t));
-		cortexm_enable_irq((void*)(u32)(i2c_irqs[port]));
+		cortexm_enable_irq(i2c_irqs[port]);
 	}
 	i2c_local[port].ref_count++;
     return 0;
@@ -173,7 +173,7 @@ int mcu_i2c_close(const devfs_handle_t * handle){
 			i2c_regs->ADR1 = 0;
 			i2c_regs->ADR2 = 0;
 			i2c_regs->ADR3 = 0;
-			cortexm_disable_irq((void*)(u32)(i2c_irqs[port]));
+			cortexm_disable_irq(i2c_irqs[port]);
 			switch(port){
 			case 0:
 				mcu_lpc_core_disable_pwr(PCI2C0);
@@ -368,7 +368,7 @@ int mcu_i2c_setaction(const devfs_handle_t * handle, void * ctl){
 	mcu_action_t * action = (mcu_action_t*)ctl;
 	int port = handle->port;
 
-	cortexm_set_irq_prio(i2c_irqs[port], action->prio);
+	cortexm_set_irq_priority(i2c_irqs[port], action->prio);
 
 	if( action->handler.callback == 0 ){
 		i2c_local[port].slave.handler.callback = 0;

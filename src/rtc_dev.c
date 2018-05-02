@@ -140,7 +140,7 @@ int mcu_rtc_setaction(const devfs_handle_t * handle, void * ctl){
 
 	rtc_local.handler = action->handler;
 
-	cortexm_set_irq_prio(rtc_irqs[port], action->prio);
+	cortexm_set_irq_priority(rtc_irqs[port], action->prio);
 	return 0;
 }
 
@@ -154,7 +154,7 @@ int set_alarm(int port, const rtc_attr_t * attr){
 
 	if( o_flags & RTC_FLAG_ENABLE_ALARM ){
 
-		cortexm_enable_irq((void*)RTC_IRQn);
+        cortexm_enable_irq(RTC_IRQn);
 
 
 		regs->ASEC = attr->time.time.tm_sec;
@@ -261,7 +261,7 @@ int mcu_rtc_write(const devfs_handle_t * handle, devfs_async_t * async){
 int set_count_event(int port, u32 o_flags){
 	LPC_RTC_Type * regs = rtc_regs[port];
 
-	cortexm_enable_irq((void*)RTC_IRQn);
+    cortexm_enable_irq(RTC_IRQn);
 
 	if( o_flags & RTC_FLAG_DISABLE_COUNT_EVENT ){
 		regs->CIIR = 0;

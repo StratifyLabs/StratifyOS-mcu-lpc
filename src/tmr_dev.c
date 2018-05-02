@@ -78,7 +78,7 @@ int mcu_tmr_open(const devfs_handle_t * handle){
 			mcu_lpc_core_enable_pwr(PCTIM3);
 			break;
 		}
-		cortexm_enable_irq((void*)(u32)(tmr_irqs[port]));
+		cortexm_enable_irq(tmr_irqs[port]);
 	}
 	m_tmr_local[port].ref_count++;
     return 0;
@@ -90,7 +90,7 @@ int mcu_tmr_close(const devfs_handle_t * handle){
 	if ( m_tmr_local[port].ref_count > 0 ){
 		if ( m_tmr_local[port].ref_count == 1 ){
 			clear_actions(port);
-			cortexm_disable_irq((void*)(u32)(tmr_irqs[port]));
+			cortexm_disable_irq(tmr_irqs[port]);
 			switch(port){
 			case 0:
 				mcu_lpc_core_disable_pwr(PCTIM0);

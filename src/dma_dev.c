@@ -35,7 +35,7 @@ void mcu_dma_init(int mode){
 	//Enable the controller
 	LPC_GPDMA->CONFIG = (1<<0);
 	//Enable the interrupts
-	cortexm_enable_irq((void*)DMA_IRQn);
+    cortexm_enable_irq(DMA_IRQn);
 }
 
 void mcu_dma_exit(){

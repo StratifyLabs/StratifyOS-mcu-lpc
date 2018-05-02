@@ -67,7 +67,7 @@ int mcu_eeprom_open(const devfs_handle_t * handle){
 
         //enable the interrupt
         if( eeprom_irqs[port] != 0xFF ){
-            cortexm_enable_irq((void*)(u32)(eeprom_irqs[port]));
+            cortexm_enable_irq(eeprom_irqs[port]);
         }
 
         //initialize the EEPROM clock
@@ -93,7 +93,7 @@ int mcu_eeprom_close(const devfs_handle_t * handle){
     if ( eeprom_local[port].ref_count > 0 ){
         if ( eeprom_local[port].ref_count == 1 ){
             //disable the interrupt
-            cortexm_disable_irq((void*)(u32)(eeprom_irqs[port]));
+            cortexm_disable_irq(eeprom_irqs[port]);
 
             //power down
             regs->PWRDWN = 1;

@@ -170,7 +170,7 @@ int mcu_uart_close(const devfs_handle_t * handle){
 
 	if ( uart_local[port].ref_count > 0 ){
 		if ( uart_local[port].ref_count == 1 ){
-			cortexm_disable_irq((void*)(u32)(uart_irqs[port]));
+			cortexm_disable_irq(uart_irqs[port]);
 			switch(port){
 			case 0:
 #if defined __lpc13uxx
@@ -276,7 +276,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 
 
 	//disable NVIC interrupt
-	cortexm_disable_irq((void*)(u32)(uart_irqs[port]));
+	cortexm_disable_irq(uart_irqs[port]);
 
 	uart_regs->RBR;
 	uart_regs->IIR;
@@ -306,7 +306,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 
 	uart_regs->IER = 0; //disable the TX/RX interrupts
 
-	cortexm_enable_irq((void*)(u32)(uart_irqs[port]));
+	cortexm_enable_irq(uart_irqs[port]);
 
 	return 0;
 }
@@ -371,7 +371,7 @@ int mcu_uart_setaction(const devfs_handle_t * handle, void * ctl){
 		}
 	}
 
-	cortexm_set_irq_prio(uart_irqs[port], action->prio);
+	cortexm_set_irq_priority(uart_irqs[port], action->prio);
 
 
 	return 0;

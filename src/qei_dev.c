@@ -37,7 +37,7 @@ int mcu_qei_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( qei_local[port].ref_count == 0 ){
 		mcu_lpc_core_enable_pwr(PCQEI);
-		cortexm_enable_irq((void*)(u32)(qei_irqs[port]));
+		cortexm_enable_irq(qei_irqs[port]);
 	}
 	qei_local[port].ref_count++;
     return 0;
@@ -47,7 +47,7 @@ int mcu_qei_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( qei_local[port].ref_count > 0 ){
 		if ( qei_local[port].ref_count == 1 ){
-			cortexm_disable_irq((void*)(u32)(qei_irqs[port]));
+			cortexm_disable_irq(qei_irqs[port]);
 			mcu_lpc_core_disable_pwr(PCQEI);
 		}
 		qei_local[port].ref_count--;
@@ -154,7 +154,7 @@ int mcu_qei_setaction(const devfs_handle_t * handle, void * ctl){
 	qei_local[port].handler.callback = action->handler.callback;
 	qei_local[port].handler.context = action->handler.context;
 
-	cortexm_set_irq_prio(qei_irqs[port], action->prio);
+	cortexm_set_irq_priority(qei_irqs[port], action->prio);
 
 
 	return 0;

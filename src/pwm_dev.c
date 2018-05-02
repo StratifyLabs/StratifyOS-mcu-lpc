@@ -78,12 +78,12 @@ int mcu_pwm_open(const devfs_handle_t * handle){
 #ifdef LPCXX7X_8X
 		case 0:
 			mcu_lpc_core_enable_pwr(PCPWM0);
-			cortexm_enable_irq((void*)PWM0_IRQn);
+            cortexm_enable_irq(PWM0_IRQn);
 			break;
 #endif
 		case 1:
 			mcu_lpc_core_enable_pwr(PCPWM1);
-			cortexm_enable_irq((void*)(u32)(pwm_irqs[port]));
+			cortexm_enable_irq(pwm_irqs[port]);
 			break;
 		}
 
@@ -99,12 +99,12 @@ int mcu_pwm_close(const devfs_handle_t * handle){
 			switch(port){
 #ifdef LPCXX7X_8X
 			case 0:
-				cortexm_disable_irq((void*)(PWM0_IRQn));
+                cortexm_disable_irq((PWM0_IRQn));
 				mcu_lpc_core_disable_pwr(PCPWM0);
 				break;
 #endif
 			case 1:
-				cortexm_disable_irq((void*)(u32)(pwm_irqs[port]));
+				cortexm_disable_irq(pwm_irqs[port]);
 				mcu_lpc_core_disable_pwr(PCPWM1);
 				break;
 			}
@@ -235,7 +235,7 @@ int mcu_pwm_setaction(const devfs_handle_t * handle, void * ctl){
 	pwm_local[port].handler.callback = action->handler.callback;
 	pwm_local[port].handler.context = action->handler.context;
 
-	cortexm_set_irq_prio(pwm_irqs[port], action->prio);
+	cortexm_set_irq_priority(pwm_irqs[port], action->prio);
 
 	//need to decode the event
 	return 0;

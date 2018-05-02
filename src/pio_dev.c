@@ -177,12 +177,12 @@ int mcu_pio_setaction(const devfs_handle_t * handle, void * ctl){
 
 #ifdef LPCXX7X_8X
     //This is the interrupt for GPIO0 and GPIO2
-    cortexm_enable_irq((void*)GPIO_IRQn);
-    cortexm_set_irq_prio(GPIO_IRQn, action->prio);
+    cortexm_enable_irq(GPIO_IRQn);
+    cortexm_set_irq_priority(GPIO_IRQn, action->prio);
 #else
     //This is the interrupt for GPIO0 and GPIO2 (shared with EINT3)
-    cortexm_enable_irq((void*)EINT3_IRQn);
-    cortexm_set_irq_prio(EINT3_IRQn, action->prio);
+    cortexm_enable_irq(EINT3_IRQn);
+    cortexm_set_irq_priority(EINT3_IRQn, action->prio);
 #endif
 
     return 0;

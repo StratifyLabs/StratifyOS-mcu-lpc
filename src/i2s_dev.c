@@ -70,7 +70,7 @@ int mcu_i2s_open(const devfs_handle_t * handle){
 			mcu_lpc_core_enable_pwr(PCI2S);
 			break;
 		}
-		cortexm_enable_irq((void*)(u32)(i2s_irqs[port]));
+		cortexm_enable_irq(i2s_irqs[port]);
 		i2s_local[port].rx.handler.callback = NULL;
 		i2s_local[port].tx.handler.callback = NULL;
 		i2s_local[port].rx.bufp = 0;
@@ -84,7 +84,7 @@ int mcu_i2s_close(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( i2s_local[port].ref_count > 0 ){
 		if ( i2s_local[port].ref_count == 1 ){
-			cortexm_disable_irq((void*)(u32)(i2s_irqs[port]));
+			cortexm_disable_irq(i2s_irqs[port]);
 			switch(port){
 			case 0:
 				mcu_lpc_core_disable_pwr(PCI2S);
@@ -278,7 +278,7 @@ int mcu_i2s_setaction(const devfs_handle_t * handle, void * ctl){
 
 	}
 
-	cortexm_set_irq_prio(i2s_irqs[port], action->prio);
+	cortexm_set_irq_priority(i2s_irqs[port], action->prio);
 
 
 	return 0;

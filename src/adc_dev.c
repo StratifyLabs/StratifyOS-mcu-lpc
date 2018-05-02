@@ -60,7 +60,7 @@ int mcu_adc_open(const devfs_handle_t * handle){
     LPC_ADC_Type * regs = adc_regs[port];
     if ( adc_local[port].ref_count == 0 ){
         mcu_lpc_core_enable_pwr(PCADC);
-        cortexm_enable_irq((void*)(u32)(adc_irqs[port]));
+        cortexm_enable_irq(adc_irqs[port]);
         regs->INTEN = 0;
         memset(&adc_local, 0, sizeof(adc_local_t));
     }
@@ -74,7 +74,7 @@ int mcu_adc_close(const devfs_handle_t * handle){
     if ( adc_local[port].ref_count > 0 ){
         if ( adc_local[port].ref_count == 1 ){
             regs->CR = 0; //reset the control -- clear the PDN bit
-            cortexm_disable_irq((void*)(u32)(adc_irqs[port]));
+            cortexm_disable_irq(adc_irqs[port]);
             mcu_lpc_core_disable_pwr(PCADC);
         }
         adc_local[port].ref_count--;
@@ -224,7 +224,7 @@ int mcu_adc_setaction(const devfs_handle_t * handle, void * ctl){
     adc_local[port].handler.callback = action->handler.callback;
     adc_local[port].handler.context = action->handler.context;
 
-    cortexm_set_irq_prio(adc_irqs[port], action->prio);
+    cortexm_set_irq_priority(adc_irqs[port], action->prio);
 
     return 0;
 }

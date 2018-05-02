@@ -66,7 +66,7 @@ int mcu_ssp_open(const devfs_handle_t * handle){
 	int port = handle->port;
 	if ( ssp_local[port].ref_count == 0 ){
 
-		cortexm_enable_irq((void*)(u32)(ssp_irqs[port]));
+		cortexm_enable_irq(ssp_irqs[port]);
 
 		switch(port){
 		case 0:
@@ -95,7 +95,7 @@ int mcu_ssp_close(const devfs_handle_t * handle){
 	if ( ssp_local[port].ref_count > 0 ){
 		if ( ssp_local[port].ref_count == 1 ){
 
-			cortexm_disable_irq((void*)(u32)(ssp_irqs[port]));
+			cortexm_disable_irq(ssp_irqs[port]);
 
 			switch(port){
 			case 0:
@@ -247,7 +247,7 @@ int mcu_ssp_setaction(const devfs_handle_t * handle, void * ctl){
 	ssp_local[port].handler.callback = action->handler.callback;
 	ssp_local[port].handler.context = action->handler.context;
 
-	cortexm_set_irq_prio(ssp_irqs[port], action->prio);
+	cortexm_set_irq_priority(ssp_irqs[port], action->prio);
 
 
 	return 0;

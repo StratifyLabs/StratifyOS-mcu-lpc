@@ -106,7 +106,7 @@ int mcu_eint_setaction(const devfs_handle_t * handle, void * ctl){
 	eint_local[port].handler.context = action->handler.context;
 
 	set_event(port, action->o_events);
-	cortexm_set_irq_prio(EINT0_IRQn + port, action->prio);
+	cortexm_set_irq_priority(EINT0_IRQn + port, action->prio);
 
 	return 0;
 }
@@ -144,7 +144,7 @@ int mcu_eint_setattr(const devfs_handle_t * handle, void * ctl){
 }
 
 void reset_eint_port(int port){
-	cortexm_disable_irq((void*)(EINT0_IRQn + port));
+    cortexm_disable_irq(EINT0_IRQn + port);
 
 	eint_local[port].handler.callback = 0;
 
@@ -179,7 +179,7 @@ int set_event(int port, u32 o_events){
 	int err;
 	err = 0;
 
-	cortexm_disable_irq((void*)(EINT0_IRQn + port));
+    cortexm_disable_irq(EINT0_IRQn + port);
 
 	LPC_SC->EXTPOLAR &= ~(1<<port);
 	LPC_SC->EXTMODE &= ~(1<<port);
@@ -201,7 +201,7 @@ int set_event(int port, u32 o_events){
 		LPC_SC->EXTINT |= (1<<port); //Clear the interrupt flag
 	}
 
-	cortexm_enable_irq((void*)EINT0_IRQn + port);
+    cortexm_enable_irq(EINT0_IRQn + port);
 	return err;
 }
 

@@ -66,7 +66,7 @@ int mcu_wdt_init(int mode, int interval){
 #endif
 
 		NVIC_SetPriority(WDT_IRQn, 1);
-		cortexm_enable_irq((void*)WDT_IRQn);
+		cortexm_enable_irq(WDT_IRQn);
 	}
 
 	//Set the interval
