@@ -274,3 +274,68 @@ int mcu_core_read(const devfs_handle_t * handle, devfs_async_t * rop){
 int mcu_core_write(const devfs_handle_t * handle, devfs_async_t * rop){
     return SYSFS_SET_RETURN(ENOTSUP);
 }
+
+//--------------------------------CACHE Operations--------------------------------
+
+#define USE_CACHE 0
+
+void mcu_core_enable_cache(){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_EnableICache();
+        SCB_EnableDCache();
+    }
+#endif
+}
+
+void mcu_core_disable_cache(){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_DisableICache();
+        SCB_DisableDCache();
+    }
+#endif
+}
+
+void mcu_core_invalidate_instruction_cache(){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_InvalidateICache();
+    }
+#endif
+}
+
+void mcu_core_clean_data_cache(){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_CleanDCache();
+    }
+#endif
+}
+
+void mcu_core_invalidate_data_cache(){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_InvalidateDCache();
+    }
+#endif
+}
+
+void mcu_core_clean_data_cache_block(void * addr, u32 size){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_CleanDCache_by_Addr(addr, size);
+    }
+#endif
+}
+
+void mcu_core_invalidate_data_cache_block(void * addr, u32 size){
+#if USE_CACHE
+    if( mcu_board_config.o_flags & MCU_BOARD_CONFIG_FLAG_ENABLE_CACHE ){
+        SCB_InvalidateDCache_by_Addr(addr, size);
+    }
+#endif
+}
+
+
+

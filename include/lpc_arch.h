@@ -24,24 +24,20 @@
 #include <mcu/types.h>
 
 #ifdef __lpc17xx
-#define ARM_MATH_CM3
 #include "mcu_lpc17xx.h"
 #endif
 
 #ifdef __lpc177x_8x
-#define ARM_MATH_CM3
 #include "mcu_lpc177x_8x.h"
 #endif
 
 #ifdef __lpc407x_8x
 #define CORE_M4 1
-#define ARM_MATH_CM4 1
 #include "mcu_lpc407x_8x.h"
 #endif
 
 #ifdef __lpc43xx
 #define CORE_M4 1
-#define ARM_MATH_CM4 1
 #include "mcu_lpc43xx.h"
 #endif
 
