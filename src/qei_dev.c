@@ -31,7 +31,7 @@ static qei_local_t qei_local[MCU_QEI_PORTS] MCU_SYS_MEM;
 static LPC_QEI_Type * const qei_regs[MCU_QEI_PORTS] = MCU_QEI_REGS;
 static u8 const qei_irqs[MCU_QEI_PORTS] = MCU_QEI_IRQS;
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(qei, QEI_VERSION, I_MCU_TOTAL + I_QEI_TOTAL, mcu_qei_get, mcu_qei_getvelocity, mcu_qei_getindex)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(qei, QEI_VERSION, QEI_IOC_IDENT_CHAR, I_MCU_TOTAL + I_QEI_TOTAL, mcu_qei_get, mcu_qei_getvelocity, mcu_qei_getindex)
 
 int mcu_qei_open(const devfs_handle_t * handle){
 	int port = handle->port;
@@ -154,7 +154,7 @@ int mcu_qei_setaction(const devfs_handle_t * handle, void * ctl){
 	qei_local[port].handler.callback = action->handler.callback;
 	qei_local[port].handler.context = action->handler.context;
 
-	cortexm_set_irq_priority(qei_irqs[port], action->prio);
+    cortexm_set_irq_priority(qei_irqs[port], action->prio, action->o_events);
 
 
 	return 0;

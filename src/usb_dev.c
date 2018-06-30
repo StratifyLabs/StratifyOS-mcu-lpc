@@ -113,7 +113,7 @@ u32 usb_sie_rd_cmd_dat (u32 cmd){
 	return usb_sie_rd_dat();
 }
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(usb, USB_VERSION, I_MCU_TOTAL + I_USB_TOTAL, mcu_usb_isconnected)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(usb, USB_VERSION, USB_IOC_IDENT_CHAR, I_MCU_TOTAL + I_USB_TOTAL, mcu_usb_isconnected)
 
 int mcu_usb_open(const devfs_handle_t * handle){
 	if ( usb_local.ref_count == 0 ){
@@ -238,7 +238,7 @@ int mcu_usb_setaction(const devfs_handle_t * handle, void * ctl){
 	int log_ep;
 	int ret = -1;
 
-	cortexm_set_irq_priority(USB_IRQn, action->prio);
+    cortexm_set_irq_priority(USB_IRQn, action->prio, action->o_events);
 	log_ep = action->channel & ~0x80;
 
 	if( action->o_events &

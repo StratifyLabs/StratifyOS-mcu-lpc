@@ -55,7 +55,7 @@ static int calc_page(int loc){
     return loc / MCU_EEPROM_PAGE_SIZE;
 }
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(eeprom, EEPROM_VERSION)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(eeprom, EEPROM_VERSION, EEPROM_IOC_IDENT_CHAR)
 
 int mcu_eeprom_open(const devfs_handle_t * handle){
     int port = handle->port;

@@ -58,7 +58,7 @@ static int set_alarm(int port, const rtc_attr_t * attr);
 static int get_alarm(int port, rtc_info_t * info);
 static int set_count_event(int port, u32 o_flags);
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(rtc, RTC_VERSION, I_MCU_TOTAL + I_RTC_TOTAL, mcu_rtc_set, mcu_rtc_get)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(rtc, RTC_VERSION, RTC_IOC_IDENT_CHAR, I_MCU_TOTAL + I_RTC_TOTAL, mcu_rtc_set, mcu_rtc_get)
 
 int mcu_rtc_open(const devfs_handle_t * handle){
 	int port = handle->port;
@@ -140,7 +140,7 @@ int mcu_rtc_setaction(const devfs_handle_t * handle, void * ctl){
 
 	rtc_local.handler = action->handler;
 
-	cortexm_set_irq_priority(rtc_irqs[port], action->prio);
+    cortexm_set_irq_priority(rtc_irqs[port], action->prio, action->o_events);
 	return 0;
 }
 

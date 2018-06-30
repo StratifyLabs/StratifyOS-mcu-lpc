@@ -134,7 +134,7 @@ static int i2c_transfer(const devfs_handle_t * handle, int op, devfs_async_t * d
 #define i2c_slave_nack(port) (LPC_I2C[port].CONCLR = I2CONCLR_AAC)
 #define i2c_slave_clr_int(port) (LPC_I2C[port].CONCLR = I2CONCLR_SIC)
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(i2c, I2C_VERSION)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(i2c, I2C_VERSION, I2C_IOC_IDENT_CHAR)
 
 int mcu_i2c_open(const devfs_handle_t * handle){
 	int port = handle->port;
@@ -368,7 +368,7 @@ int mcu_i2c_setaction(const devfs_handle_t * handle, void * ctl){
 	mcu_action_t * action = (mcu_action_t*)ctl;
 	int port = handle->port;
 
-	cortexm_set_irq_priority(i2c_irqs[port], action->prio);
+    cortexm_set_irq_priority(i2c_irqs[port], action->prio, action->o_events);
 
 	if( action->handler.callback == 0 ){
 		i2c_local[port].slave.handler.callback = 0;

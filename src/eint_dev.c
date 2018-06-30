@@ -44,7 +44,7 @@ static void configure_pin(const mcu_pin_t * pin, void * arg){
 	mcu_pio_setattr(&pio_handle, attr);
 }
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(eint, EINT_VERSION)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(eint, EINT_VERSION, EINT_IOC_IDENT_CHAR)
 
 
 int mcu_eint_open(const devfs_handle_t * handle){
@@ -106,7 +106,7 @@ int mcu_eint_setaction(const devfs_handle_t * handle, void * ctl){
 	eint_local[port].handler.context = action->handler.context;
 
 	set_event(port, action->o_events);
-	cortexm_set_irq_priority(EINT0_IRQn + port, action->prio);
+    cortexm_set_irq_priority(EINT0_IRQn + port, action->prio, action->o_events);
 
 	return 0;
 }

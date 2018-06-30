@@ -51,7 +51,7 @@ static int write_complete(void * context);
 
 static void exec_callback(int port, u32 o_events);
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(dac_dma, DAC_VERSION, I_MCU_TOTAL + I_DAC_TOTAL, mcu_dac_dma_get, mcu_dac_dma_set)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(dac_dma, DAC_VERSION, DAC_IOC_IDENT_CHAR, I_MCU_TOTAL + I_DAC_TOTAL, mcu_dac_dma_get, mcu_dac_dma_set)
 
 int mcu_dac_dma_open(const devfs_handle_t * handle){
 	int port = handle->port;

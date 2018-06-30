@@ -59,7 +59,7 @@ i2s_local_t i2s_local[MCU_I2S_PORTS] MCU_SYS_MEM;
 
 static void exec_callback(i2s_transfer_t * transfer, u32 o_events);
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(i2s, I2S_VERSION, I_MCU_TOTAL + I_I2S_TOTAL, mcu_i2s_mute, mcu_i2s_unmute)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(i2s, I2S_VERSION, I2S_IOC_IDENT_CHAR, I_MCU_TOTAL + I_I2S_TOTAL, mcu_i2s_mute, mcu_i2s_unmute)
 
 
 int mcu_i2s_open(const devfs_handle_t * handle){
@@ -278,7 +278,7 @@ int mcu_i2s_setaction(const devfs_handle_t * handle, void * ctl){
 
 	}
 
-	cortexm_set_irq_priority(i2s_irqs[port], action->prio);
+    cortexm_set_irq_priority(i2s_irqs[port], action->prio, action->o_events);
 
 
 	return 0;

@@ -52,7 +52,7 @@ void enable_pin(const mcu_pin_t * pin, void * arg){
     mcu_pio_setattr(&pio_handle, &pattr);
 }
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(adc, ADC_VERSION)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION_MIN(adc, ADC_VERSION, ADC_IOC_IDENT_CHAR)
 
 
 int mcu_adc_open(const devfs_handle_t * handle){
@@ -224,7 +224,7 @@ int mcu_adc_setaction(const devfs_handle_t * handle, void * ctl){
     adc_local[port].handler.callback = action->handler.callback;
     adc_local[port].handler.context = action->handler.context;
 
-    cortexm_set_irq_priority(adc_irqs[port], action->prio);
+    cortexm_set_irq_priority(adc_irqs[port], action->prio, action->o_events);
 
     return 0;
 }

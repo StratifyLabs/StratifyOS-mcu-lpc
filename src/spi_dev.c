@@ -45,7 +45,7 @@ static void exec_callback(int port, u32 o_events);
 static int spi_port_transfer(const devfs_handle_t * handle, int is_read, devfs_async_t * dop);
 static int byte_swap(int port, int byte);
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(spi, SPI_VERSION, I_MCU_TOTAL + I_SPI_TOTAL, mcu_spi_swap)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(spi, SPI_VERSION, SPI_IOC_IDENT_CHAR, I_MCU_TOTAL + I_SPI_TOTAL, mcu_spi_swap)
 
 int mcu_spi_open(const devfs_handle_t * handle){
 	int port = handle->port;
@@ -179,7 +179,7 @@ int mcu_spi_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	spi_local[port].handler = action->handler;
-	cortexm_set_irq_priority(spi_irqs[port], action->prio);
+    cortexm_set_irq_priority(spi_irqs[port], action->prio, action->o_events);
 	return 0;
 }
 

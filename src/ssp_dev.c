@@ -60,7 +60,7 @@ void enable_pin(const mcu_pin_t * pin, void * arg){
 #define enable_pin 0
 #endif
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(ssp, SPI_VERSION, I_MCU_TOTAL + I_SPI_TOTAL, mcu_ssp_swap)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(ssp, SPI_VERSION, SPI_IOC_IDENT_CHAR, I_MCU_TOTAL + I_SPI_TOTAL, mcu_ssp_swap)
 
 int mcu_ssp_open(const devfs_handle_t * handle){
 	int port = handle->port;
@@ -247,7 +247,7 @@ int mcu_ssp_setaction(const devfs_handle_t * handle, void * ctl){
 	ssp_local[port].handler.callback = action->handler.callback;
 	ssp_local[port].handler.context = action->handler.context;
 
-	cortexm_set_irq_priority(ssp_irqs[port], action->prio);
+    cortexm_set_irq_priority(ssp_irqs[port], action->prio, action->o_events);
 
 
 	return 0;

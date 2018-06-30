@@ -33,7 +33,7 @@ static pio_local_t m_pio2_local MCU_SYS_MEM;
 
 static int set_event(int port, int event, int pin);
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(pio, PIO_VERSION, I_MCU_TOTAL + I_PIO_TOTAL, mcu_pio_setmask, mcu_pio_clrmask, mcu_pio_get, mcu_pio_set)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(pio, PIO_VERSION, PIO_IOC_IDENT_CHAR, I_MCU_TOTAL + I_PIO_TOTAL, mcu_pio_setmask, mcu_pio_clrmask, mcu_pio_get, mcu_pio_set)
 
 int mcu_pio_open(const devfs_handle_t * handle){
     int port = handle->port;
@@ -178,11 +178,11 @@ int mcu_pio_setaction(const devfs_handle_t * handle, void * ctl){
 #ifdef LPCXX7X_8X
     //This is the interrupt for GPIO0 and GPIO2
     cortexm_enable_irq(GPIO_IRQn);
-    cortexm_set_irq_priority(GPIO_IRQn, action->prio);
+    cortexm_set_irq_priority(GPIO_IRQn, action->prio, action->o_events);
 #else
     //This is the interrupt for GPIO0 and GPIO2 (shared with EINT3)
     cortexm_enable_irq(EINT3_IRQn);
-    cortexm_set_irq_priority(EINT3_IRQn, action->prio);
+    cortexm_set_irq_priority(EINT3_IRQn, action->prio, action->o_events);
 #endif
 
     return 0;

@@ -68,7 +68,7 @@ static void configure_pin(const mcu_pin_t * pin, void * arg){
 
 }
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(pwm, PWM_VERSION, I_MCU_TOTAL + I_PWM_TOTAL, mcu_pwm_setchannel, mcu_pwm_getchannel, mcu_pwm_set, mcu_pwm_get, mcu_pwm_enable, mcu_pwm_disable)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(pwm, PWM_VERSION, PWM_IOC_IDENT_CHAR, I_MCU_TOTAL + I_PWM_TOTAL, mcu_pwm_setchannel, mcu_pwm_getchannel, mcu_pwm_set, mcu_pwm_get, mcu_pwm_enable, mcu_pwm_disable)
 
 
 int mcu_pwm_open(const devfs_handle_t * handle){
@@ -235,7 +235,7 @@ int mcu_pwm_setaction(const devfs_handle_t * handle, void * ctl){
 	pwm_local[port].handler.callback = action->handler.callback;
 	pwm_local[port].handler.context = action->handler.context;
 
-	cortexm_set_irq_priority(pwm_irqs[port], action->prio);
+    cortexm_set_irq_priority(pwm_irqs[port], action->prio, action->o_events);
 
 	//need to decode the event
 	return 0;
