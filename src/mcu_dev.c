@@ -22,6 +22,7 @@ const mcu_config_t mcu_config = {
     .irq_middle_prio = MCU_MIDDLE_IRQ_PRIORITY,
     .usb_logical_endpoint_count = DEV_USB_LOGICAL_ENDPOINT_COUNT,
     .delay_factor = MCU_DELAY_FACTOR,
+    .git_hash = SOS_GIT_HASH
 };
 
 
