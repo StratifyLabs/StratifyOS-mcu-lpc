@@ -148,9 +148,9 @@ int mcu_mem_erasepage(const devfs_handle_t * handle, void * ctl){
         return SYSFS_SET_RETURN(EROFS);
     }
 
-    cortexm_disable_interrupts(NULL);
+	 cortexm_disable_interrupts();
     err = mcu_lpc_flash_erase_page((u32)ctl);
-    cortexm_enable_interrupts(NULL);
+	 cortexm_enable_interrupts();
     if ( err < 0 ){
         return SYSFS_SET_RETURN(EIO);
     }

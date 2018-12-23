@@ -302,6 +302,8 @@ int mcu_core_initclock(int div){
 
 	mcu_core_initclock_dev(fclk, fosc, clk_src, pdiv);
 
+	cortexm_set_systick_reload(0xffffff);
+	cortexm_start_systick();
 
 	return 0;
 }
