@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Stratify OS.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * 
+ *
+ *
  */
 
 #include <mcu/eint.h>
@@ -54,7 +54,7 @@ int mcu_eint_open(const devfs_handle_t * handle){
 		reset_eint_port(port);
 	}
 	eint_local[port].ref_count++;
-    return 0;
+	return 0;
 }
 
 int mcu_eint_close(const devfs_handle_t * handle){
@@ -65,11 +65,11 @@ int mcu_eint_close(const devfs_handle_t * handle){
 		}
 		eint_local[port].ref_count--;
 	}
-    return 0;
+	return 0;
 }
 
 int mcu_eint_read(const devfs_handle_t * handle, devfs_async_t * wop){
-    return SYSFS_SET_RETURN(ENOTSUP);
+	return SYSFS_SET_RETURN(ENOTSUP);
 }
 
 int mcu_eint_write(const devfs_handle_t * handle, devfs_async_t * wop){
@@ -78,10 +78,10 @@ int mcu_eint_write(const devfs_handle_t * handle, devfs_async_t * wop){
 	port = handle->port;
 	if ( eint_local[port].handler.callback != 0 ){
 		//The interrupt is on -- port is busy
-        return SYSFS_SET_RETURN(EBUSY);
+		return SYSFS_SET_RETURN(EBUSY);
 	}
 	if( wop->nbyte != sizeof(mcu_action_t) ){
-        return SYSFS_SET_RETURN(EINVAL);
+		return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	action = (mcu_action_t*)wop->buf;
@@ -99,14 +99,14 @@ int mcu_eint_setaction(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-        return SYSFS_SET_RETURN(EPERM);
+		return SYSFS_SET_RETURN(EPERM);
 	}
 
 	eint_local[port].handler.callback = action->handler.callback;
 	eint_local[port].handler.context = action->handler.context;
 
 	set_event(port, action->o_events);
-    cortexm_set_irq_priority(EINT0_IRQn + port, action->prio, action->o_events);
+	cortexm_set_irq_priority(EINT0_IRQn + port, action->prio, action->o_events);
 
 	return 0;
 }
@@ -125,7 +125,7 @@ int mcu_eint_setattr(const devfs_handle_t * handle, void * ctl){
 
 	const eint_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
-        return SYSFS_SET_RETURN(EINVAL);
+		return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	reset_eint_port(port);
@@ -133,18 +133,18 @@ int mcu_eint_setattr(const devfs_handle_t * handle, void * ctl){
 	pattr.o_flags = attr->o_flags;
 
 	if( mcu_set_pin_assignment(
-			&(attr->pin_assignment),
-			MCU_CONFIG_PIN_ASSIGNMENT(eint_config_t, handle),
-			MCU_PIN_ASSIGNMENT_COUNT(eint_pin_assignment_t),
-            CORE_PERIPH_EINT, port, configure_pin, 0, &pattr) < 0 ){
-        return SYSFS_SET_RETURN(EINVAL);
+			 &(attr->pin_assignment),
+			 MCU_CONFIG_PIN_ASSIGNMENT(eint_config_t, handle),
+			 MCU_PIN_ASSIGNMENT_COUNT(eint_pin_assignment_t),
+			 CORE_PERIPH_EINT, port, configure_pin, 0, &pattr) < 0 ){
+		return SYSFS_SET_RETURN(EINVAL);
 	}
 
 	return 0;
 }
 
 void reset_eint_port(int port){
-    cortexm_disable_irq(EINT0_IRQn + port);
+	cortexm_disable_irq(EINT0_IRQn + port);
 
 	eint_local[port].handler.callback = 0;
 
@@ -155,18 +155,18 @@ void reset_eint_port(int port){
 	pin.port = 2;
 
 	switch(port){
-	case 0:
-		pin.pin = 10;
-		break;
-	case 1:
-		pin.pin = 11;
-		break;
-	case 2:
-		pin.pin = 12;
-		break;
-	case 3:
-		pin.pin = 13;
-		break;
+		case 0:
+			pin.pin = 10;
+			break;
+		case 1:
+			pin.pin = 11;
+			break;
+		case 2:
+			pin.pin = 12;
+			break;
+		case 3:
+			pin.pin = 13;
+			break;
 	}
 
 	mcu_core_set_pinsel_func(&pin,CORE_PERIPH_PIO,2);
@@ -179,7 +179,7 @@ int set_event(int port, u32 o_events){
 	int err;
 	err = 0;
 
-    cortexm_disable_irq(EINT0_IRQn + port);
+	cortexm_disable_irq(EINT0_IRQn + port);
 
 	LPC_SC->EXTPOLAR &= ~(1<<port);
 	LPC_SC->EXTMODE &= ~(1<<port);
@@ -201,7 +201,7 @@ int set_event(int port, u32 o_events){
 		LPC_SC->EXTINT |= (1<<port); //Clear the interrupt flag
 	}
 
-    cortexm_enable_irq(EINT0_IRQn + port);
+	cortexm_enable_irq(EINT0_IRQn + port);
 	return err;
 }
 

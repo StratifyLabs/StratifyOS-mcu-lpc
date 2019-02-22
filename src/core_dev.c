@@ -14,17 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with Stratify OS.  If not, see <http://www.gnu.org/licenses/>. */
 
-
-
 #include <mcu/bootloader.h>
 #include "lpc_local.h"
-
 
 static u32 mcu_core_get_reset_src();
 static int enable_clock_out(int o_flags, int div);
 static u32 mcu_core_reset_source = CORE_FLAG_IS_RESET_SOFTWARE;
-
-
 
 int mcu_core_setpinfunc(const devfs_handle_t * handle, void * arg){
 	core_pinfunc_t * argp = arg;
@@ -39,7 +34,6 @@ int mcu_core_open(const devfs_handle_t * handle){ return 0; }
 int mcu_core_close(const devfs_handle_t * handle){ return 0; }
 int mcu_core_dev_is_powered(const devfs_handle_t * handle){ return 1; }
 
-
 int mcu_core_getinfo(const devfs_handle_t * handle, void * arg){
 	core_info_t * info = arg;
 	info->o_flags = 0;
@@ -49,7 +43,7 @@ int mcu_core_getinfo(const devfs_handle_t * handle, void * arg){
 	}
 
 	info->o_flags |= mcu_core_reset_source;
-	return mcu_lpc_flash_get_serialno(info->serial_number);
+	return mcu_lpc_flash_get_serialno(info->serial.sn);
 }
 
 int mcu_core_setattr(const devfs_handle_t * handle, void * arg){

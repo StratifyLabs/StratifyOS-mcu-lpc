@@ -21,7 +21,7 @@
 #include <mcu/crc.h>
 #include "lpc_local.h"
 
-u16 mcu_calc_crc16(u16 seed, const u8 * buffer, u32 nbyte){
+u16 mcu_calc_crc16(u16 seed, u16 polynomial, const u8 * buffer, u32 nbyte){
 #if defined LPC_CRC
 	size_t i;
 	LPC_CRC->MODE = 0x00; //CRC-CCITT
@@ -35,7 +35,7 @@ u16 mcu_calc_crc16(u16 seed, const u8 * buffer, u32 nbyte){
 #endif
 }
 
-u8 mcu_calc_crc7(u8 seed, const u8 * chr, u32 len){
+u8 mcu_calc_crc7(u8 seed, u8 polynomial, const u8 * chr, u32 len){
 	int i,a;
 	unsigned char crc,data;
 	crc=seed;

@@ -5,6 +5,9 @@ cmake_minimum_required (VERSION 3.6)
 set(SOURCES_PREFIX ${CMAKE_SOURCE_DIR}/src)
 add_subdirectory(src)
 list(APPEND SOS_LIB_SOURCELIST ${SOURCES})
+file(GLOB LDSCRIPTS ldscript/*)
+list(APPEND SOS_LIB_SOURCELIST ${LDSCRIPTS})
+
 
 if( ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin" )
   set(SOS_TOOLCHAIN_CMAKE_PATH /Applications/StratifyLabs-SDK/Tools/gcc/arm-none-eabi/cmake)
