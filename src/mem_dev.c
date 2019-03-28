@@ -75,7 +75,7 @@ int mcu_mem_getinfo(const devfs_handle_t * handle, void * ctl){
 	mem_info_t * info = ctl;
 	info->flash_pages = (u32)&_flash_pages;
 	info->flash_size = FLASH_SIZE;
-	info->ram_pages = (u32)&_flash_pages;
+	info->ram_pages = SRAM_PAGES + AHB_SRAM_PAGES;
 	info->ram_size = (u32)&_sram_size + (u32)&_ahb_sram_size;
 	info->system_ram_page = SRAM_PAGES;
 	info->usage = mcu_ram_usage_table;
@@ -92,13 +92,12 @@ int mcu_mem_setaction(const devfs_handle_t * handle, void * ctl){
 }
 
 int mcu_mem_getpageinfo(const devfs_handle_t * handle, void * ctl){
+	MCU_UNUSED_ARGUMENT(handle);
 	u32 size = 0;
 	int32_t addr = 0;
 	mem_pageinfo_t * ctlp = ctl;
 
-
 	if( ctlp->o_flags & MEM_FLAG_IS_RAM ){
-
 		size = get_ram_page_size(ctlp->num);
 		addr = get_ram_page_addr(ctlp->num);
 		if ( addr < 0 ){
@@ -109,6 +108,12 @@ int mcu_mem_getpageinfo(const devfs_handle_t * handle, void * ctl){
 
 		size = get_flash_page_size(ctlp->num);
 		addr = get_flash_page_addr(ctlp->num);
+
+		if( (ctlp->o_flags & MEM_FLAG_IS_BLANK) &&
+			 (blank_check(addr, size) < 0) ){
+			ctlp->o_flags &= ~MEM_FLAG_IS_BLANK;
+		}
+
 		if ( (addr + size) > FLASH_SIZE){
 			return SYSFS_SET_RETURN(EINVAL);
 		}
@@ -125,6 +130,10 @@ int mcu_mem_getpageinfo(const devfs_handle_t * handle, void * ctl){
 			ctlp->num = get_flash_page(ctlp->addr);
 			ctlp->size = get_flash_page_size(ctlp->num);
 			ctlp->o_flags = MEM_FLAG_IS_FLASH;
+			if( (ctlp->o_flags & MEM_FLAG_IS_BLANK) &&
+				 (blank_check(addr, size) < 0) ){
+				ctlp->o_flags &= ~MEM_FLAG_IS_BLANK;
+			}
 			return 0;
 		} else {
 			return SYSFS_SET_RETURN(EINVAL);
@@ -138,8 +147,6 @@ int mcu_mem_getpageinfo(const devfs_handle_t * handle, void * ctl){
 	ctlp->addr = addr;
 	return 0;
 }
-
-
 
 int mcu_mem_erasepage(const devfs_handle_t * handle, void * ctl){
 	int err;
