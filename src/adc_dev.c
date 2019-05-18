@@ -150,6 +150,7 @@ int mcu_adc_getinfo(const devfs_handle_t * handle, void * ctl){
     info->freq = ADC_MAX_FREQ;
     info->o_flags = (ADC_FLAG_IS_LEFT_JUSTIFIED|ADC_FLAG_IS_RIGHT_JUSTIFIED);
     info->resolution = 12;
+	 info->bytes_per_sample = 2;
     info->maximum = 0xfff0;
 
     if( config ){

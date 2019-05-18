@@ -109,11 +109,6 @@ int mcu_mem_getpageinfo(const devfs_handle_t * handle, void * ctl){
 		size = get_flash_page_size(ctlp->num);
 		addr = get_flash_page_addr(ctlp->num);
 
-		if( (ctlp->o_flags & MEM_FLAG_IS_BLANK) &&
-			 (blank_check(addr, size) < 0) ){
-			ctlp->o_flags &= ~MEM_FLAG_IS_BLANK;
-		}
-
 		if ( (addr + size) > FLASH_SIZE){
 			return SYSFS_SET_RETURN(EINVAL);
 		}
@@ -130,10 +125,6 @@ int mcu_mem_getpageinfo(const devfs_handle_t * handle, void * ctl){
 			ctlp->num = get_flash_page(ctlp->addr);
 			ctlp->size = get_flash_page_size(ctlp->num);
 			ctlp->o_flags = MEM_FLAG_IS_FLASH;
-			if( (ctlp->o_flags & MEM_FLAG_IS_BLANK) &&
-				 (blank_check(addr, size) < 0) ){
-				ctlp->o_flags &= ~MEM_FLAG_IS_BLANK;
-			}
 			return 0;
 		} else {
 			return SYSFS_SET_RETURN(EINVAL);
