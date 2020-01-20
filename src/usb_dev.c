@@ -502,7 +502,12 @@ int mcu_usb_root_read_endpoint(const devfs_handle_t * handle, u32 endpoint_num, 
 
 /*! \details
  */
-int mcu_usb_root_write_endpoint(const devfs_handle_t * handle, u32 endpoint_num, const void * src, u32 size){
+int mcu_usb_root_write_endpoint(
+		const devfs_handle_t * handle,
+		u32 endpoint_num,
+		const void * src,
+		u32 size
+		){
 	u32 n;
 	u32 * ptr = (u32*)src;
 
