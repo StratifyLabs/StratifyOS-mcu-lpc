@@ -91,7 +91,7 @@
 #define MCU_PWM_IRQS { PWM0_IRQn, PWM1_IRQn }
 
 #define MCU_ENET_API 0
-#define MCU_ENET_PORTS 1
+#define MCU_ENET_PORTS 0
 #define MCU_ENET_REGS { LPC_EMAC }
 #define MCU_ENET_IRQS { ENET_IRQn }
 

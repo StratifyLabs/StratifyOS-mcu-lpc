@@ -124,7 +124,6 @@ int mcu_lpc_flash_get_serialno(uint32_t * dest);
 #define MCU_EINT_PORTS 4
 
 
-#define MCU_ENET_PORTS 1
 #define MCU_FLASH_PORTS 1
 #define MCU_MEM_PORTS 1
 
@@ -153,7 +152,7 @@ int mcu_lpc_flash_get_serialno(uint32_t * dest);
 #define MCU_PWM_IRQS { PWM1_IRQn, PWM1_IRQn }
 
 #define MCU_ENET_API 0
-#define MCU_ENET_PORTS 1
+#define MCU_ENET_PORTS 0
 #define MCU_ENET_REGS { LPC_EMAC }
 #define MCU_ENET_IRQS { ENET_IRQn }
 

@@ -17,7 +17,7 @@
  * 
  */
 
-#include <mcu/enet.h>
+#include <mcu/eth.h>
 #include "lpc_local.h"
 #include "enet_local.h"
 
@@ -31,7 +31,7 @@ typedef struct MCU_PACK {
 typedef struct {
 	mcu_event_handler_t write;
 	mcu_event_handler_t read;
-	enet_attr_t attr;
+	eth_attr_t attr;
 	uint8_t ref_count;
 	enet_descriptor_t tx_desc;
 	enet_descriptor_t rx_desc;
@@ -78,7 +78,7 @@ int mcu_enet_close(const devfs_handle_t * handle){
 
 int mcu_enet_getinfo(const devfs_handle_t * handle, void * ctl){
 	int port = handle->port;
-	memcpy(ctl, &(enet_local[port].attr), sizeof(enet_attr_t));
+	memcpy(ctl, &(enet_local[port].attr), sizeof(eth_attr_t));
 	return 0;
 }
 
@@ -89,7 +89,7 @@ int mcu_enet_setattr(const devfs_handle_t * handle, void * ctl){
 
 #else
 
-	const enet_attr_t * attr = mcu_select_attr(handle, ctl);
+	const eth_attr_t * attr = mcu_select_attr(handle, ctl);
 	if( attr == 0 ){
         return SYSFS_SET_RETURN(EINVAL);
 	}
@@ -99,7 +99,7 @@ int mcu_enet_setattr(const devfs_handle_t * handle, void * ctl){
 
 
 	//pin select
-	if( attr->pin_assign == 0 ){
+	if( attr->pin_assignment == 0 ){
 		/*
 		mcu_core_set_pinsel_func(1, 0, CORE_PERIPH_ENET, port);
 		mcu_core_set_pinsel_func(1, 1, CORE_PERIPH_ENET, port);
@@ -144,9 +144,9 @@ int mcu_enet_setattr(const devfs_handle_t * handle, void * ctl){
 
 
 	//set MAC address
-	regs->SA0 = ((uint32_t) attr->mac_addr[5] << 8) | ((uint32_t) attr->mac_addr[4]);
-	regs->SA1 = ((uint32_t) attr->mac_addr[3] << 8) | ((uint32_t) attr->mac_addr[2]);
-	regs->SA2 = ((uint32_t) attr->mac_addr[1] << 8) | ((uint32_t) attr->mac_addr[0]);
+	regs->SA0 = ((uint32_t) attr->mac_address[5] << 8) | ((uint32_t) attr->mac_address[4]);
+	regs->SA1 = ((uint32_t) attr->mac_address[3] << 8) | ((uint32_t) attr->mac_address[2]);
+	regs->SA2 = ((uint32_t) attr->mac_address[1] << 8) | ((uint32_t) attr->mac_address[0]);
 
 	regs->Command |= (ENET_COMMAND_TXENABLE | ENET_COMMAND_RXENABLE);
 
