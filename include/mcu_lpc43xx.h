@@ -21,7 +21,7 @@
 #define MCU_ARCH_MCU_LPC43XX_H_
 
 #include <string.h>
-#include <mcu/types.h>
+#include <sdk/types.h>
 
 #if !defined CORE_M4
 #define CORE_M4

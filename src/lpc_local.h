@@ -27,8 +27,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <cortexm/cortexm.h>
+#include <sos/debug.h>
+
 #include <mcu/core.h>
-#include <mcu/debug.h>
 #include <mcu/core.h>
 #include <mcu/pio.h>
 #include <mcu/mcu.h>

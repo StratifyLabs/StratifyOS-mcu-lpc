@@ -118,7 +118,7 @@ int mcu_spi_setattr(const devfs_handle_t * handle, void * ctl){
 		//2 uses the SPI
 		cr0 = (1<<2);
 
-		tmp = mcu_board_config.core_periph_freq / attr->freq;
+		tmp = lpc_config.clock_peripheral_freq / attr->freq;
 		tmp = ( tmp > 255 ) ? 254 : tmp;
 		tmp = ( tmp < 8 ) ? 8 : tmp;
 		if ( tmp & 0x01 ){

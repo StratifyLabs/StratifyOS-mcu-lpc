@@ -192,10 +192,10 @@ int mcu_adc_setattr(const devfs_handle_t * handle, void * ctl){
 
     //Calculate the clock setting
 #ifdef __lpc17xx
-    clk_div = mcu_board_config.core_periph_freq/(freq * 65);
+    clk_div = lpc_config.clock_peripheral_freq/(freq * 65);
 #endif
 #ifdef LPCXX7X_8X
-    clk_div = mcu_board_config.core_periph_freq/(freq * 31);
+    clk_div = lpc_config.clock_peripheral_freq/(freq * 31);
 #endif
 
     if ( clk_div > 0 ){

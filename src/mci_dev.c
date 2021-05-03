@@ -99,7 +99,7 @@ int mcu_mci_setattr(const devfs_handle_t * handle, void * ctl){
 		attr->freq = 100000000; //set to max freq
 	}
 
-	clkdiv = (mcu_board_config.core_periph_freq + attr->freq) / (2 * attr->freq) - 1;
+	clkdiv = (lpc_config.clock_peripheral_freq + attr->freq) / (2 * attr->freq) - 1;
 
 	if( clkdiv > 255 ){
 		clkdiv = 255;

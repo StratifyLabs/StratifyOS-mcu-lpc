@@ -20,8 +20,7 @@
 #ifndef LPC_ARCH_H_
 #define LPC_ARCH_H_
 
-
-#include <mcu/types.h>
+#include <sdk/types.h>
 
 #ifdef __lpc17xx
 #include "mcu_lpc17xx.h"
@@ -42,9 +41,15 @@
 #endif
 
 typedef struct {
-    u32 clock_oscillator_freq;
-    u32 clock_peripheral_freq;
+  u32 max_packet_zero;
+} lpc_usb_config_t;
+
+typedef struct {
+  u32 clock_oscillator_freq;
+  u32 clock_peripheral_freq;
+  lpc_usb_config_t usb;
 } lpc_config_t;
 
+extern const lpc_config_t lpc_config;
 
 #endif /* LPC_ARCH_H_ */

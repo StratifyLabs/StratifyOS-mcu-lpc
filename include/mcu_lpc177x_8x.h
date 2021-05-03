@@ -23,7 +23,7 @@
 #include <stdint.h>
 
 #include <string.h>
-#include <mcu/types.h>
+#include <sdk/types.h>
 
 #include "mcu_lpc_core.h"
 #include "mcu_lpc_dma.h"

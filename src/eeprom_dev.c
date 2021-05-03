@@ -71,10 +71,10 @@ int mcu_eeprom_open(const devfs_handle_t * handle){
         }
 
         //initialize the EEPROM clock
-        regs->CLKDIV = (mcu_board_config.core_cpu_freq / 350000) - 1;
+        regs->CLKDIV = (sos_config.sys.core_clock_frequency / 350000) - 1;
 
         //initialize the STATE register
-        cpu_mhz = mcu_board_config.core_cpu_freq / 1000000;
+        cpu_mhz = sos_config.sys.core_clock_frequency / 1000000;
         phase[0] = (((cpu_mhz*20) + 999) / 1000);
         phase[1] = (((cpu_mhz*65) + 999) / 1000);
         phase[2] = (((cpu_mhz*40) + 999) / 1000);

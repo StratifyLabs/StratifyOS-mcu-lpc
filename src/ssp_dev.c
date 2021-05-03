@@ -162,7 +162,7 @@ int mcu_ssp_setattr(const devfs_handle_t * handle, void * ctl){
 		cr0 = 0;
 		cr1 = (1<<1); //set the enable
 
-		tmp = mcu_board_config.core_periph_freq / attr->freq;
+		tmp = lpc_config.clock_peripheral_freq / attr->freq;
 		tmp = ( tmp > 255 ) ? 254 : tmp;
 		tmp = ( tmp < 2 ) ? 2 : tmp;
 		if ( tmp & 0x01 ){

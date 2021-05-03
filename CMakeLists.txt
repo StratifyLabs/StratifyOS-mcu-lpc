@@ -1,36 +1,23 @@
 cmake_minimum_required (VERSION 3.6)
 
-# Grab the SDK location
-if(NOT DEFINED SOS_SDK_PATH)
-	if(DEFINED ENV{SOS_SDK_PATH})
-		set(SOS_SDK_PATH $ENV{SOS_SDK_PATH})
-	elseif( ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin" )
-		message(WARNING "default SDK locations are deprecated")
-		set(SOS_SDK_PATH /Applications/StratifyLabs-SDK)
-	elseif( ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows" )
-		message(WARNING "default SDK locations are deprecated")
-		set(SOS_SDK_PATH C:/StratifyLabs-SDK)
-	elseif( ${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux" )
-		message(WARNING "default SDK locations are deprecated")
-		set(SOS_SDK_PATH /StratifyLabs-SDK)
-	endif()
+if(NOT SOS_SDK_PATH)
+	set(SOS_SDK_PATH $ENV{SOS_SDK_PATH})
 endif()
-if(NOT DEFINED SOS_SDK_PATH)
-	message(FATAL_ERROR "Please set environment variable SOS_SDK_PATH to location of the StratifyLabs-SDK directory")
-endif()
-set(SOS_TOOLCHAIN_CMAKE_PATH ${SOS_SDK_PATH}/Tools/gcc/arm-none-eabi/cmake)
 
-include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-variables.cmake)
-set(CMAKE_TOOLCHAIN_FILE ${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib-toolchain.cmake)
+set(CMAKE_MODULE_PATH ${SOS_SDK_PATH}/cmake)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_MODULE_PATH}/sos-toolchain.cmake)
+include(sos-sdk)
 
 set(SOS_NAME sos)
+project(StratifyOS-mcu-stm32 C ASM)
+
+if(NOT API_IS_SDK)
+	include(StratifyOS)
+endif()
+
+set(SOS_NAME StratifyOS-mcu-lpc)
 project(${SOS_NAME} C ASM)
 #Add sources to the project
-set(SOURCES_PREFIX ${CMAKE_SOURCE_DIR}/src)
-add_subdirectory(src)
-list(APPEND SOS_SOURCELIST ${SOURCES})
-file(GLOB LDSCRIPTS ldscript/*)
-list(APPEND SOS_SOURCELIST ${LDSCRIPTS})
 
 install(DIRECTORY include/ DESTINATION include/mcu/arch/lpc)
 
@@ -38,26 +25,61 @@ set(SOS_INCLUDE_DIRECTORIES include)
 
 option(BUILD_ALL "Build Lpc17xx device family" OFF)
 option(BUILD_LPC17XX "Build Lpc17xx device family" OFF)
-option(BUILD_LPC40XX "Build Lpc17xx device family" OFF)
+option(BUILD_LPC40XX "Build Lpc40xx device family" OFF)
+
+sos_sdk_add_subdirectory(LPC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+function(add_targets FAMILY CHIP VARIANT VARIANT_DEFINE ARCH)
+
+	file(GLOB VARIANT_HEADERS
+		${CMAKE_CURRENT_SOURCE_DIR}/include/*${VARIANT}.h
+		${CMAKE_CURRENT_SOURCE_DIR}/include/cmsis/${CHIP}.h)
+	file(GLOB LDSCRIPT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/ldscript/${FAMILY}*")
+
+	set(SOURCELIST ${LPC_SOURCES} ${VARIANT_HEADERS} ${LDSCRIPT_SOURCES} include/lpc_arch.h)
+	set(DEFINITIONS __${VARIANT} ${VARIANT_DEFINE}=1 MCU_ARCH_LPC)
+
+	sos_sdk_library_target(RELEASE StratifyOS ${VARIANT} release ${ARCH})
+	sos_sdk_library_target(DEBUG StratifyOS ${VARIANT} debug ${ARCH})
+	add_library(${RELEASE_TARGET} STATIC)
+	target_compile_definitions(${RELEASE_TARGET} PUBLIC ${DEFINITIONS} )
+	target_sources(${RELEASE_TARGET} PRIVATE ${SOURCELIST})
+	target_include_directories(${RELEASE_TARGET}
+		PUBLIC
+		$<INSTALL_INTERFACE:include/lpc>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+		)
+	target_compile_options(${RELEASE_TARGET} PUBLIC -Os)
+
+	# create debug as a copy of release
+	add_library(${DEBUG_TARGET} STATIC)
+	sos_sdk_copy_target(${RELEASE_TARGET} ${DEBUG_TARGET})
+
+	target_link_libraries(${RELEASE_TARGET}
+		PUBLIC
+		StratifyOS_mcu_release_${ARCH}
+		)
+
+	target_link_libraries(${DEBUG_TARGET}
+		PUBLIC
+		StratifyOS_mcu_debug_${ARCH}
+		)
+
+
+	# Add SOS SDK build settings to targets
+	sos_sdk_library("${RELEASE_OPTIONS}")
+	sos_sdk_library("${DEBUG_OPTIONS}")
+endfunction()
 
 if(BUILD_ALL OR BUILD_LPC17XX)
-	set(SOS_OPTION mcu_lpc17xx)
-	set(SOS_DEFINITIONS __lpc17xx)
-	set(SOS_ARCH v7m)
-	set(SOS_CONFIG release)
-	include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib.cmake)
-	set(SOS_CONFIG debug)
-	include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib.cmake)
+	add_targets(lpc17 LPC17xx mcu_lpc17xx __lpc17xx v7m)
+
 endif()
 
 if(BUILD_ALL OR BUILD_LPC40XX)
-	set(SOS_OPTION mcu_lpc407x_8x)
-	set(SOS_DEFINITIONS __lpc407x_8x)
-	set(SOS_ARCH v7em_f4sh)
-	set(SOS_CONFIG release)
-	include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib.cmake)
-	set(SOS_CONFIG debug)
-	include(${SOS_TOOLCHAIN_CMAKE_PATH}/sos-lib.cmake)
+	add_targets(lpc40 LPC407x_8x_177x_8x mcu_lpc407x_8x __lpc407x_8x v7em_f4sh)
+
 endif()
 
 install(DIRECTORY ldscript/ DESTINATION lib/ldscripts)

@@ -282,7 +282,7 @@ int mcu_uart_setattr(const devfs_handle_t * handle, void * ctl){
 	uart_regs->IIR;
 
 	uart_regs->LCR = ULCR_DLAB_ENABLE;
-	f_div =  (mcu_board_config.core_periph_freq + attr->width*baud_rate) / (baud_rate * 16) ;	// calculate the divisor
+	f_div =  (lpc_config.clock_peripheral_freq + attr->width*baud_rate) / (baud_rate * 16) ;	// calculate the divisor
 	baud_low = f_div & 0xFF;
 	baud_high = (f_div >> 8) & 0xFF;
 	uart_regs->DLM = baud_high;

@@ -179,7 +179,7 @@ int mcu_pwm_setattr(const devfs_handle_t * handle, void * ctl){
 	}
 
 	if( o_flags & PWM_FLAG_SET_TIMER ){
-		tmp = mcu_board_config.core_periph_freq / freq;
+		tmp = lpc_config.clock_peripheral_freq / freq;
 		if ( tmp > 0 ){
 			tmp = tmp - 1;
 		}

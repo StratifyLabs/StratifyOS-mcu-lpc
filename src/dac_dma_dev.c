@@ -107,7 +107,7 @@ int mcu_dac_dma_setattr(const devfs_handle_t * handle, void * ctl){
         return SYSFS_SET_RETURN(EINVAL);
 	}
 
-	clkdiv = mcu_board_config.core_periph_freq / freq;
+	clkdiv = lpc_config.clock_peripheral_freq / freq;
 	if ( clkdiv > ((1<<16)-1) ){
 		clkdiv = ((1<<16)-1);
 	} else if ( clkdiv < 1 ){

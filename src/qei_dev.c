@@ -91,7 +91,7 @@ int mcu_qei_setattr(const devfs_handle_t * handle, void * ctl){
             return SYSFS_SET_RETURN(EINVAL);
 		}
 
-		if ( attr->velocity_freq > mcu_board_config.core_periph_freq ){
+                if ( attr->velocity_freq > lpc_config.clock_peripheral_freq ){
             return SYSFS_SET_RETURN(EINVAL);
 		}
 
@@ -104,7 +104,7 @@ int mcu_qei_setattr(const devfs_handle_t * handle, void * ctl){
 		}
 
 		regs->MAXPOS = attr->max_position;
-		regs->LOAD = mcu_board_config.core_periph_freq / attr->velocity_freq;
+                regs->LOAD = lpc_config.clock_peripheral_freq / attr->velocity_freq;
 #ifdef __lpc17xx
 		regs->FILTER = attr->filter;
 #endif

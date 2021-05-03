@@ -1,4 +1,4 @@
-/* Copyright 2011-2016 Tyler Gilbert; 
+/* Copyright 2011-2016 Tyler Gilbert;
  * This file is part of Stratify OS.
  *
  * Stratify OS is free software: you can redistribute it and/or modify
@@ -13,44 +13,29 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Stratify OS.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * 
+ *
+ *
  */
 
-#include <mcu/bootloader.h>
 #include "lpc_local.h"
+#include <sos/boot/bootloader.h>
+#include <cortexm/cortexm.h>
+#include <cortexm/fault.h>
+#include <sos/config.h>
+#include <sos/symbols.h>
 
 static void core_init();
 static const char sys_proc_name[] = "sys";
 extern int _main();
 
-const bootloader_api_t mcu_core_bootloader_api MCU_WEAK;
-const bootloader_api_t mcu_core_bootloader_api = {
-		.code_size = 0,
-};
 
-void mcu_core_hardware_id() MCU_ALIAS(mcu_core_default_isr);
 
-void mcu_core_reset_handler() __attribute__ ((section(".reset_vector")));
-void mcu_core_nmi_isr() MCU_WEAK;
-
-void mcu_core_hardfault_handler() MCU_WEAK;
-void mcu_core_memfault_handler() MCU_WEAK;
-void mcu_core_busfault_handler() MCU_WEAK;
-void mcu_core_usagefault_handler() MCU_WEAK;
-
-void mcu_core_default_isr() MCU_WEAK;
-void mcu_core_os_handler() MCU_WEAK;
-void mcu_core_svcall_handler();
-void mcu_core_debugmon_handler() MCU_ALIAS(mcu_core_os_handler);
-void mcu_core_pendsv_handler();
-void mcu_core_systick_handler();
-
-#define _DECLARE_ISR(name) void mcu_core_##name##_isr() MCU_ALIAS(mcu_core_default_isr)
+#define _DECLARE_ISR(name)                                                     \
+  void mcu_core_##name##_isr() MCU_ALIAS(mcu_core_default_isr)
 #define _ISR(name) mcu_core_##name##_isr
 
 #if defined __lpc43xx
-//ISR's -- weakly bound to default handler
+// ISR's -- weakly bound to default handler
 _DECLARE_ISR(dac0);
 _DECLARE_ISR(m0core);
 _DECLARE_ISR(dma);
@@ -107,8 +92,8 @@ _DECLARE_ISR(qei);
 #endif
 
 #if defined LPCXX7X_8X
-//ISR's -- weakly bound to default handler
-_DECLARE_ISR(wdt);  //0
+// ISR's -- weakly bound to default handler
+_DECLARE_ISR(wdt); // 0
 _DECLARE_ISR(tmr0);
 _DECLARE_ISR(tmr1);
 _DECLARE_ISR(tmr2);
@@ -118,7 +103,7 @@ _DECLARE_ISR(uart1);
 _DECLARE_ISR(uart2);
 _DECLARE_ISR(uart3);
 _DECLARE_ISR(pwm1);
-_DECLARE_ISR(i2c0); //10
+_DECLARE_ISR(i2c0); // 10
 _DECLARE_ISR(i2c1);
 _DECLARE_ISR(i2c2);
 _DECLARE_ISR(sw0);
@@ -128,7 +113,7 @@ _DECLARE_ISR(pll0);
 _DECLARE_ISR(rtc0);
 _DECLARE_ISR(eint0);
 _DECLARE_ISR(eint1);
-_DECLARE_ISR(eint2); //20
+_DECLARE_ISR(eint2); // 20
 _DECLARE_ISR(eint3);
 _DECLARE_ISR(adc0);
 _DECLARE_ISR(bod);
@@ -138,7 +123,7 @@ _DECLARE_ISR(dma);
 _DECLARE_ISR(i2s0);
 _DECLARE_ISR(enet0);
 _DECLARE_ISR(mci0);
-_DECLARE_ISR(mcpwm0); //30
+_DECLARE_ISR(mcpwm0); // 30
 _DECLARE_ISR(qei0);
 _DECLARE_ISR(pll1);
 _DECLARE_ISR(usb_activity);
@@ -148,16 +133,15 @@ _DECLARE_ISR(ssp2);
 _DECLARE_ISR(lcd0);
 _DECLARE_ISR(pio0);
 _DECLARE_ISR(pwm0);
-_DECLARE_ISR(eeprom0); //40
+_DECLARE_ISR(eeprom0); // 40
 _DECLARE_ISR(cmp0);
 _DECLARE_ISR(cmp1);
-
 
 #endif
 
 #if defined __lpc17xx
-//ISR's -- weakly bound to default handler
-_DECLARE_ISR(wdt);  //0
+// ISR's -- weakly bound to default handler
+_DECLARE_ISR(wdt); // 0
 _DECLARE_ISR(tmr0);
 _DECLARE_ISR(tmr1);
 _DECLARE_ISR(tmr2);
@@ -167,7 +151,7 @@ _DECLARE_ISR(uart1);
 _DECLARE_ISR(uart2);
 _DECLARE_ISR(uart3);
 _DECLARE_ISR(pwm1);
-_DECLARE_ISR(i2c0); //10
+_DECLARE_ISR(i2c0); // 10
 _DECLARE_ISR(i2c1);
 _DECLARE_ISR(i2c2);
 _DECLARE_ISR(spi0);
@@ -177,7 +161,7 @@ _DECLARE_ISR(pll0);
 _DECLARE_ISR(rtc0);
 _DECLARE_ISR(eint0);
 _DECLARE_ISR(eint1);
-_DECLARE_ISR(eint2); //20
+_DECLARE_ISR(eint2); // 20
 _DECLARE_ISR(eint3);
 _DECLARE_ISR(adc0);
 _DECLARE_ISR(bod);
@@ -187,7 +171,7 @@ _DECLARE_ISR(dma);
 _DECLARE_ISR(i2s0);
 _DECLARE_ISR(enet0);
 _DECLARE_ISR(mci0);
-_DECLARE_ISR(mcpwm0); //30
+_DECLARE_ISR(mcpwm0); // 30
 _DECLARE_ISR(qei0);
 _DECLARE_ISR(pll1);
 _DECLARE_ISR(sw0);
@@ -197,244 +181,196 @@ _DECLARE_ISR(sw3);
 _DECLARE_ISR(sw4);
 _DECLARE_ISR(sw5);
 _DECLARE_ISR(sw6);
-_DECLARE_ISR(sw7); //40
+_DECLARE_ISR(sw7); // 40
 #endif
 
 /*! \details This is the startup code which gets written to
- * address 0 (or wherever the text starts if there is another bootloader) in flash memory
+ * address 0 (or wherever the text starts if there is another bootloader) in
+ * flash memory
  */
 
-void (* const mcu_core_vector_table[])() __attribute__ ((section(".startup"))) = {
-		// Core Level - CM3
-		(void*)&_top_of_stack,					// The initial stack pointer
-		mcu_core_reset_handler,						// The reset handler
-		mcu_core_nmi_isr,							// The NMI handler
-		mcu_core_hardfault_handler,					// The hard fault handler
-		mcu_core_memfault_handler,					// The MPU fault handler
-		mcu_core_busfault_handler,					// The bus fault handler
-		mcu_core_usagefault_handler,				// The usage fault handler
-		mcu_core_hardware_id,					// Reserved -- this is the checksum addr for ISP programming 0x1C
-		0,										// Reserved
-		(void*)&mcu_core_bootloader_api,		// Reserved -- this is the kernel signature checksum value 0x24
-		0,										// Reserved
-		mcu_core_svcall_handler,					// SVCall handler
-		mcu_core_debugmon_handler,					// Debug monitor handler
-		0,										// Reserved
-		mcu_core_pendsv_handler,					// The PendSV handler
-		mcu_core_systick_handler,					// The SysTick handler
-		//Non Cortex M3 interrupts
+void (*const mcu_core_vector_table[])() __attribute__((section(".startup"))) = {
+    (void *)&_top_of_stack,        // The initial stack pointer
+    cortexm_reset_handler,         // The reset handler
+    cortexm_nmi_handler,           // The NMI handler
+    cortexm_hardfault_handler,     // The hard fault handler
+    cortexm_memfault_handler,      // The MPU fault handler
+    cortexm_busfault_handler,      // The bus fault handler
+    cortexm_usagefault_handler,    // The usage fault handler
+    (void *)&_sos_hardware_id,     // hardware ID
+    0,                             // Reserved
+    (void *)&sos_config.boot.api,  // boot API pointer
+    0,                             // Reserved
+    cortexm_svcall_handler,        // SVCall handler
+    cortexm_debug_monitor_handler, // Debug monitor handler
+    0,                             // Reserved
+    cortexm_pendsv_handler,        // The PendSV handler
+    cortexm_systick_handler,       // The SysTick handler
+// Non Cortex M interrupts (device specific interrupts)
 
 #if defined __lpc43xx
-		_ISR(dac0),  //0
-		_ISR(m0core),
-		_ISR(dma),
-		_ISR(sw0),
-		_ISR(sw1),
-		_ISR(enet0),
-		_ISR(sdio0),
-		_ISR(lcd0),
-		_ISR(usb0),
-		_ISR(usb1),
-		_ISR(sct0), //10
-		_ISR(rit0),
-		_ISR(tmr0),
-		_ISR(tmr1),
-		_ISR(tmr2),
-		_ISR(tmr3),
-		_ISR(mcpwm0),
-		_ISR(adc0),
-		_ISR(i2c0),
-		_ISR(i2c1),
-		_ISR(spi0), //20
-		_ISR(adc1),
-		_ISR(ssp0),
-		_ISR(ssp1),
-		_ISR(uart0),
-		_ISR(uart1),
-		_ISR(uart2),
-		_ISR(uart3),
-		_ISR(i2s0),
-		_ISR(i2s1),
-		_ISR(sw3), //30
-		_ISR(sgpio0),
-		_ISR(eint0),
-		_ISR(eint1),
-		_ISR(eint2),
-		_ISR(eint3),
-		_ISR(eint4),
-		_ISR(eint5),
-		_ISR(eint6),
-		_ISR(eint7),
-		_ISR(pio0), //40
-		_ISR(pio1),
-		_ISR(eventrouter0),
-		_ISR(can1),
-		_ISR(sw4),
-		_ISR(sw5),
-		_ISR(atmr0),
-		_ISR(rtc0),
-		_ISR(sw6),
-		_ISR(wdt),
-		_ISR(sw7), //50
-		_ISR(can0),
-		_ISR(qei)
+    _ISR(dac0), // 0
+    _ISR(m0core),
+    _ISR(dma),
+    _ISR(sw0),
+    _ISR(sw1),
+    _ISR(enet0),
+    _ISR(sdio0),
+    _ISR(lcd0),
+    _ISR(usb0),
+    _ISR(usb1),
+    _ISR(sct0), // 10
+    _ISR(rit0),
+    _ISR(tmr0),
+    _ISR(tmr1),
+    _ISR(tmr2),
+    _ISR(tmr3),
+    _ISR(mcpwm0),
+    _ISR(adc0),
+    _ISR(i2c0),
+    _ISR(i2c1),
+    _ISR(spi0), // 20
+    _ISR(adc1),
+    _ISR(ssp0),
+    _ISR(ssp1),
+    _ISR(uart0),
+    _ISR(uart1),
+    _ISR(uart2),
+    _ISR(uart3),
+    _ISR(i2s0),
+    _ISR(i2s1),
+    _ISR(sw3), // 30
+    _ISR(sgpio0),
+    _ISR(eint0),
+    _ISR(eint1),
+    _ISR(eint2),
+    _ISR(eint3),
+    _ISR(eint4),
+    _ISR(eint5),
+    _ISR(eint6),
+    _ISR(eint7),
+    _ISR(pio0), // 40
+    _ISR(pio1),
+    _ISR(eventrouter0),
+    _ISR(can1),
+    _ISR(sw4),
+    _ISR(sw5),
+    _ISR(atmr0),
+    _ISR(rtc0),
+    _ISR(sw6),
+    _ISR(wdt),
+    _ISR(sw7), // 50
+    _ISR(can0),
+    _ISR(qei)
 #endif
 
 #if defined LPCXX7X_8X
 
-		_ISR(wdt), //0
-		_ISR(tmr0),
-		_ISR(tmr1),
-		_ISR(tmr2),
-		_ISR(tmr3),
-		_ISR(uart0),
-		_ISR(uart1),
-		_ISR(uart2),
-		_ISR(uart3),
-		_ISR(pwm1),
-		_ISR(i2c0), //10
-		_ISR(i2c1),
-		_ISR(i2c2),
-		_ISR(sw0),
-		_ISR(ssp0),
-		_ISR(ssp1),
-		_ISR(pll0),
-		_ISR(rtc0),
-		_ISR(eint0),
-		_ISR(eint1),
-		_ISR(eint2), //20
-		_ISR(eint3),
-		_ISR(adc0),
-		_ISR(bod),
-		_ISR(usb0),
-		_ISR(can0),
-		_ISR(dma),
-		_ISR(i2s0),
-		_ISR(enet0),
-		_ISR(mci0),
-		_ISR(mcpwm0), //30
-		_ISR(qei0),
-		_ISR(pll1),
-		_ISR(usb_activity),
-		_ISR(can_activity),
-		_ISR(uart4),
-		_ISR(ssp2),
-		_ISR(lcd0),
-		_ISR(pio0),
-		_ISR(pwm0),
-		_ISR(eeprom0), //40
-		_ISR(cmp0),
-		_ISR(cmp1)
+        _ISR(wdt), // 0
+    _ISR(tmr0),
+    _ISR(tmr1),
+    _ISR(tmr2),
+    _ISR(tmr3),
+    _ISR(uart0),
+    _ISR(uart1),
+    _ISR(uart2),
+    _ISR(uart3),
+    _ISR(pwm1),
+    _ISR(i2c0), // 10
+    _ISR(i2c1),
+    _ISR(i2c2),
+    _ISR(sw0),
+    _ISR(ssp0),
+    _ISR(ssp1),
+    _ISR(pll0),
+    _ISR(rtc0),
+    _ISR(eint0),
+    _ISR(eint1),
+    _ISR(eint2), // 20
+    _ISR(eint3),
+    _ISR(adc0),
+    _ISR(bod),
+    _ISR(usb0),
+    _ISR(can0),
+    _ISR(dma),
+    _ISR(i2s0),
+    _ISR(enet0),
+    _ISR(mci0),
+    _ISR(mcpwm0), // 30
+    _ISR(qei0),
+    _ISR(pll1),
+    _ISR(usb_activity),
+    _ISR(can_activity),
+    _ISR(uart4),
+    _ISR(ssp2),
+    _ISR(lcd0),
+    _ISR(pio0),
+    _ISR(pwm0),
+    _ISR(eeprom0), // 40
+    _ISR(cmp0),
+    _ISR(cmp1)
 #endif
 
 #if defined __lpc17xx
-		_ISR(wdt), //0
-		_ISR(tmr0),
-		_ISR(tmr1),
-		_ISR(tmr2),
-		_ISR(tmr3),
-		_ISR(uart0),
-		_ISR(uart1),
-		_ISR(uart2),
-		_ISR(uart3),
-		_ISR(pwm1),
-		_ISR(i2c0), //10
-		_ISR(i2c1),
-		_ISR(i2c2),
-		_ISR(spi0),
-		_ISR(ssp0),
-		_ISR(ssp1),
-		_ISR(pll0),
-		_ISR(rtc0),
-		_ISR(eint0),
-		_ISR(eint1),
-		_ISR(eint2), //20
-		_ISR(eint3),
-		_ISR(adc0),
-		_ISR(bod),
-		_ISR(usb0),
-		_ISR(can0),
-		_ISR(dma),
-		_ISR(i2s0),
-		_ISR(enet0),
-		_ISR(mci0),
-		_ISR(mcpwm0), //30
-		_ISR(qei0),
-		_ISR(pll1),
-		_ISR(sw0),
-		_ISR(sw1),
-		_ISR(sw2),
-		_ISR(sw3),
-		_ISR(sw4),
-		_ISR(sw5),
-		_ISR(sw6),
-		_ISR(sw7) //40
+        _ISR(wdt), // 0
+    _ISR(tmr0),
+    _ISR(tmr1),
+    _ISR(tmr2),
+    _ISR(tmr3),
+    _ISR(uart0),
+    _ISR(uart1),
+    _ISR(uart2),
+    _ISR(uart3),
+    _ISR(pwm1),
+    _ISR(i2c0), // 10
+    _ISR(i2c1),
+    _ISR(i2c2),
+    _ISR(spi0),
+    _ISR(ssp0),
+    _ISR(ssp1),
+    _ISR(pll0),
+    _ISR(rtc0),
+    _ISR(eint0),
+    _ISR(eint1),
+    _ISR(eint2), // 20
+    _ISR(eint3),
+    _ISR(adc0),
+    _ISR(bod),
+    _ISR(usb0),
+    _ISR(can0),
+    _ISR(dma),
+    _ISR(i2s0),
+    _ISR(enet0),
+    _ISR(mci0),
+    _ISR(mcpwm0), // 30
+    _ISR(qei0),
+    _ISR(pll1),
+    _ISR(sw0),
+    _ISR(sw1),
+    _ISR(sw2),
+    _ISR(sw3),
+    _ISR(sw4),
+    _ISR(sw5),
+    _ISR(sw6),
+    _ISR(sw7) // 40
 #endif
 
 };
 
-void mcu_core_getserialno(mcu_sn_t * serial_number){
-	mcu_lpc_flash_get_serialno(serial_number->sn);
+void mcu_core_getserialno(mcu_sn_t *serial_number) {
+  mcu_lpc_flash_get_serialno(serial_number->sn);
 }
 
-void core_init(){
-	uint32_t *src, *dest;
-	src = &_etext; //point src to copy of data that is stored in flash
-	for(dest = &_data; dest < &_edata; ){ *dest++ = *src++; } //Copy from flash to RAM (data)
-	for(src = &_bss; src < &_ebss; ) *src++ = 0; //Zero out BSS section
-	for(src = &_sys; src < &_esys; ) *src++ = 0; //Zero out sysmem
+void core_init() {
 
-
-	//Re-entrancy initialization
-	//If the program faults on the next line, make sure the etext and data are aligned properly in the linker script (4 byte boundary)
-	_REENT->procmem_base = (proc_mem_t*)&_ebss;
-	_REENT->procmem_base->size = 0;
-	_REENT->procmem_base->sigactions = NULL;
-	_REENT->procmem_base->siginfos = NULL;
-	_REENT->procmem_base->proc_name = sys_proc_name;
-
-	memset(_REENT->procmem_base->open_file, 0, sizeof(open_file_t)*OPEN_MAX);
-
-	//Initialize the global mutexes
-	__lock_init_recursive_global(__malloc_lock_object);
-	_REENT->procmem_base->__malloc_lock_object.flags |= PTHREAD_MUTEX_FLAGS_PSHARED; //Make the malloc lock pshared
-
-
-	__lock_init_global(__tz_lock_object);
-	__lock_init_recursive_global(__atexit_lock);
-	__lock_init_recursive_global(__sfp_lock);
-	__lock_init_recursive_global(__sinit_lock);
-	__lock_init_recursive_global(__env_lock_object);
-
-	//This is the de facto MCU initialization -- turn off power to peripherals that must be "open()"ed.
+  // This is the de facto MCU initialization -- turn off power to peripherals
+  // that must be "open()"ed.
 #if defined LPC_SC
-	LPC_SC->PCONP = (1<<PCGPIO)|(1<<PCRTC);
+  LPC_SC->PCONP = (1 << PCGPIO) | (1 << PCRTC);
 #else
 
 #endif
 }
 
-void mcu_core_reset_handler(){
-	core_init();
-	cortexm_set_vector_table_addr((void*)mcu_core_vector_table);
-	_main(); //This function should never return
-	while(1);
-}
-
-
-void mcu_core_nmi_isr(){
-	mcu_board_execute_event_handler(MCU_BOARD_CONFIG_EVENT_ROOT_FATAL, "NMI");
-}
-
-
-void mcu_core_os_handler(){
-	return;
-}
-
-void mcu_core_default_isr(){
-	mcu_board_execute_event_handler(MCU_BOARD_CONFIG_EVENT_ROOT_FATAL, "default isr");
-}
-
-
-
+void mcu_core_default_isr() { sos_handle_event(SOS_EVENT_ROOT_FATAL, "dflt"); }
 

@@ -128,7 +128,7 @@ int mcu_tmr_getinfo(const devfs_handle_t * handle, void * ctl){
 			TMR_FLAG_IS_CHANNEL_SET_OUTPUT_ON_MATCH |
 			TMR_FLAG_IS_CHANNEL_CLEAR_OUTPUT_ON_MATCH |
 			TMR_FLAG_IS_CHANNEL_TOGGLE_OUTPUT_ON_MATCH;
-	info->freq = mcu_board_config.core_periph_freq / (tmr_regs_table[port]->PR+1);
+	info->freq = lpc_config.clock_peripheral_freq / (tmr_regs_table[port]->PR+1);
 
 
 	return 0;
@@ -170,8 +170,8 @@ int mcu_tmr_setattr(const devfs_handle_t * handle, void * ctl){
 			}
 
 			//Set the prescalar so that the freq is correct
-			if ( (attr->freq < mcu_board_config.core_periph_freq) && (attr->freq != 0) ){
-				tmr_regs_table[port]->PR = ((mcu_board_config.core_periph_freq + attr->freq/2) / attr->freq);
+			if ( (attr->freq < lpc_config.clock_peripheral_freq) && (attr->freq != 0) ){
+				tmr_regs_table[port]->PR = ((lpc_config.clock_peripheral_freq + attr->freq/2) / attr->freq);
 				if (tmr_regs_table[port]->PR != 0 ){
 					tmr_regs_table[port]->PR -= 1;
 				}

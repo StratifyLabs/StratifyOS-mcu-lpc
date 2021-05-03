@@ -261,7 +261,7 @@ int mcu_i2c_setattr(const devfs_handle_t * handle, void * ctl){
 		i2c_local[port].master.size = 0; //no bytes
 		i2c_local[port].master.data = 0; //no data pointer
 
-		count = ((mcu_board_config.core_periph_freq) / (freq * 2));
+		count = ((lpc_config.clock_peripheral_freq) / (freq * 2));
 		if ( count > 0xFFFF ){
 			count = 0xFFFF;
 		}

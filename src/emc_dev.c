@@ -68,7 +68,7 @@ int mcu_emc_setattr(const devfs_handle_t * handle, void * ctl){
 	}
 
 
-	if( attr->clock < mcu_board_config.core_cpu_freq ){
+	if( attr->clock < sos_config.sys.core_clock_frequency ){
 		LPC_SC->EMCCLKSEL = 1;
 	} else {
 		LPC_SC->EMCCLKSEL = 0;

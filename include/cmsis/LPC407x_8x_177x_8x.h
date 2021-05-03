@@ -114,7 +114,7 @@ typedef enum IRQn
 #define __FPU_PRESENT                  1           /*!< FPU present or not                                                    */
 
 
-#include <mcu/arch/cmsis/core_cm4.h>                               /*!< Cortex-M4 processor and core peripherals                              */
+#include <sos/arch/cmsis/core_cm4.h>                               /*!< Cortex-M4 processor and core peripherals                              */
 #else
 /* Configuration of the Cortex-M3 Processor and Core Peripherals */
 #define __MPU_PRESENT             1         /*!< MPU present or not                               */
@@ -122,7 +122,7 @@ typedef enum IRQn
 #define __Vendor_SysTickConfig    0         /*!< Set to 1 if different SysTick Config is used     */
 
 
-#include "core_cm3.h"                       /* Cortex-M3 processor and core peripherals           */
+#include <sos/arch/cmsis/core_cm3.h>                               /*!< Cortex-M4 processor and core peripherals                              */
 
 #endif
 

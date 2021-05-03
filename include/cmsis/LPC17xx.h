@@ -109,7 +109,7 @@ typedef enum IRQn
 #define __Vendor_SysTickConfig    0         /*!< Set to 1 if different SysTick Config is used     */
 
 
-#include <mcu/arch/cmsis/core_cm3.h>                       /* Cortex-M3 processor and core peripherals           */
+#include <sos/arch/cmsis/core_cm3.h>                       /* Cortex-M3 processor and core peripherals           */
 
 
 /******************************************************************************/

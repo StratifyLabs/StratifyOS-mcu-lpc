@@ -107,7 +107,7 @@ int mcu_wdt_setinterval(int interval){
 		counts = (1000 * interval);
 		break;
 	case 1:
-		counts = ( (mcu_core_getclock() / 1000) * interval + 2 ) / 4;
+		counts = ( (sos_config.sys.core_clock_frequency / 1000) * interval + 2 ) / 4;
 		break;
 	case 2:
 		counts = ( 8 * interval );
