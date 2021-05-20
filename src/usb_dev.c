@@ -284,7 +284,7 @@ int mcu_usb_setaction(const devfs_handle_t *handle, void *ctl) {
     return 0;
   }
 
-  if (action->handler.callback == 0) {
+  if (action->handler.callback == NULL) {
 
     // cancel any pending actions and execute the callback
     if (action->o_events & MCU_EVENT_FLAG_WRITE_COMPLETE) {
@@ -355,7 +355,7 @@ int mcu_usb_read(const devfs_handle_t *handle, devfs_async_t *async) {
     ret = mcu_usb_root_read_endpoint(handle, loc, async->buf);
   } else {
     // data won't be ready until another call to this
-    async->nbyte = 0;
+    async->result = 0;
     if (!(async->flags & O_NONBLOCK)) {
       // If this is a blocking call, set the callback and context
       if (cortexm_validate_callback(async->handler.callback) < 0) {
@@ -368,7 +368,7 @@ int mcu_usb_read(const devfs_handle_t *handle, devfs_async_t *async) {
   }
 
   if (ret != 0) {
-    local->endpoint_handlers[loc].read = 0;
+    local->endpoint_handlers[loc].read = NULL;
   }
 
   return ret;
@@ -388,10 +388,10 @@ int mcu_usb_write(const devfs_handle_t *handle, devfs_async_t *async) {
 
   DEVFS_DRIVER_IS_BUSY(local->endpoint_handlers[ep].write, async);
 
-  async->nbyte =
+  async->result =
       mcu_usb_root_write_endpoint(handle, loc, async->buf, async->nbyte);
 
-  if (async->nbyte < 0) {
+  if (async->result < 0) {
     usb_disable_endpoint(handle, loc);
     usb_reset_endpoint(handle, loc);
     usb_enable_endpoint(handle, loc);
@@ -677,12 +677,12 @@ void slow_ep_int() {
                                       MCU_EVENT_FLAG_DATA_READY, &event);
           } else {
             if (m_usb_local[0].endpoint_handlers[log_ep].read) {
-              m_usb_local[0].endpoint_handlers[log_ep].read->nbyte =
+              const int nbyte =
                   mcu_usb_root_read_endpoint(
                       0, log_ep,
                       m_usb_local[0].endpoint_handlers[log_ep].read->buf);
               devfs_execute_read_handler(
-                  &m_usb_local[0].endpoint_handlers[log_ep], &event, 0,
+                  &m_usb_local[0].endpoint_handlers[log_ep], &event, nbyte,
                   MCU_EVENT_FLAG_DATA_READY);
             } else {
               m_usb_local[0].read_ready |= (1 << log_ep);
