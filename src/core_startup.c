@@ -25,7 +25,6 @@
 #include <sos/symbols.h>
 
 static void core_init();
-static const char sys_proc_name[] = "sys";
 extern int _main();
 
 

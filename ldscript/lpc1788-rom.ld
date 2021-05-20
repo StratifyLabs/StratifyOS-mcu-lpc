@@ -3,7 +3,7 @@
 MEMORY {
    flash : ORIGIN = 0, LENGTH = 512K
 	 ram : ORIGIN = 0x20000000, LENGTH = 16K
-	 sysmem : ORIGIN = ORIGIN(ram) + LENGTH(ram), LENGTH = 16K
+	 sysmem : ORIGIN = 0x20004000, LENGTH = 16K
 }
 
 SECTIONS {

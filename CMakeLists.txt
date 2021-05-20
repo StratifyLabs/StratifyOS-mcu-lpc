@@ -19,7 +19,6 @@ set(SOS_NAME StratifyOS-mcu-lpc)
 project(${SOS_NAME} C ASM)
 #Add sources to the project
 
-install(DIRECTORY include/ DESTINATION include/mcu/arch/lpc)
 
 set(SOS_INCLUDE_DIRECTORIES include)
 
@@ -29,7 +28,7 @@ option(BUILD_LPC40XX "Build Lpc40xx device family" OFF)
 
 sos_sdk_add_subdirectory(LPC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-function(add_targets FAMILY CHIP VARIANT VARIANT_DEFINE ARCH)
+function(add_targets FAMILY MCU CHIP VARIANT VARIANT_DEFINE ARCH)
 
 	file(GLOB VARIANT_HEADERS
 		${CMAKE_CURRENT_SOURCE_DIR}/include/*${VARIANT}.h
@@ -39,8 +38,8 @@ function(add_targets FAMILY CHIP VARIANT VARIANT_DEFINE ARCH)
 	set(SOURCELIST ${LPC_SOURCES} ${VARIANT_HEADERS} ${LDSCRIPT_SOURCES} include/lpc_arch.h)
 	set(DEFINITIONS __${VARIANT} ${VARIANT_DEFINE}=1 MCU_ARCH_LPC)
 
-	sos_sdk_library_target(RELEASE StratifyOS ${VARIANT} release ${ARCH})
-	sos_sdk_library_target(DEBUG StratifyOS ${VARIANT} debug ${ARCH})
+	sos_sdk_library_target(RELEASE StratifyOS ${MCU} release ${ARCH})
+	sos_sdk_library_target(DEBUG StratifyOS ${MCU} debug ${ARCH})
 	add_library(${RELEASE_TARGET} STATIC)
 	target_compile_definitions(${RELEASE_TARGET} PUBLIC ${DEFINITIONS} )
 	target_sources(${RELEASE_TARGET} PRIVATE ${SOURCELIST})
@@ -73,13 +72,14 @@ function(add_targets FAMILY CHIP VARIANT VARIANT_DEFINE ARCH)
 endfunction()
 
 if(BUILD_ALL OR BUILD_LPC17XX)
-	add_targets(lpc17 LPC17xx mcu_lpc17xx __lpc17xx v7m)
+	add_targets(lpc17 lpc17xx LPC17xx mcu_lpc17xx __lpc17xx v7m)
 
 endif()
 
 if(BUILD_ALL OR BUILD_LPC40XX)
-	add_targets(lpc40 LPC407x_8x_177x_8x mcu_lpc407x_8x __lpc407x_8x v7em_f4sh)
+	add_targets(lpc40 lpc407x_8x LPC407x_8x_177x_8x mcu_lpc407x_8x __lpc407x_8x v7em_f4sh)
 
 endif()
 
 install(DIRECTORY ldscript/ DESTINATION lib/ldscripts)
+install(DIRECTORY include/ DESTINATION include/lpc)

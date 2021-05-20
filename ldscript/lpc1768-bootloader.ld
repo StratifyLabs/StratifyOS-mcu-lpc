@@ -21,6 +21,7 @@ SECTIONS {
   . = 0;
   .text : {
          _text = .;
+				 _tcim = .;
   		 *(.startup)
   		 *(.reset_vector)
          *(.text)
@@ -47,7 +48,9 @@ SECTIONS {
   } >flash
   __exidx_end = .;
   _etext = .;
-  .data : {
+	_etcim = .;
+
+	.data : {
          _data = .;
          *(.data)
          *(.data.*)

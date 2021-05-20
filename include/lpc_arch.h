@@ -50,6 +50,17 @@ typedef struct {
   lpc_usb_config_t usb;
 } lpc_config_t;
 
+void lpc_clock_initialize(
+    int (*handle_match_channel0)(void *context, const mcu_event_t *data),
+    int (*handle_match_channel1)(void *context, const mcu_event_t *data),
+    int (*handle_overflow)(void *context, const mcu_event_t *data));
+void lpc_clock_enable();
+u32 lpc_clock_disable();
+void lpc_clock_set_channel(const mcu_channel_t *channel);
+void lpc_clock_get_channel(mcu_channel_t *channel);
+u32 lpc_clock_microseconds();
+u32 lpc_clock_nanoseconds();
+
 extern const lpc_config_t lpc_config;
 
 #endif /* LPC_ARCH_H_ */

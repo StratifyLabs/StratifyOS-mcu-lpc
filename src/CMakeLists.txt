@@ -19,6 +19,7 @@ set(SOURCES
 	flash_dev.c
 	i2c_dev.c
 	i2s_dev.c
+	lpc_config.c
 	lpc_flash.c
 	mci_dev.c
 	mcu_dev.c

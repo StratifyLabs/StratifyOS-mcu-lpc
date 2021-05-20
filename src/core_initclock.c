@@ -256,9 +256,13 @@ static int mcu_core_initclock_dev(int fclk, int fosc, u8 clk_src, int pdiv) {
 // lpc_config.clock_peripheral_freq to be defined ext
 int mcu_core_initclock(int div) {
   u8 clk_src = 0;
-  u32 fosc = sos_config.sys.core_clock_frequency;
+  u32 fosc = lpc_config.clock_oscillator_freq;
   int pdiv = sos_config.sys.core_clock_frequency / lpc_config.clock_peripheral_freq;
   u32 fclk = sos_config.sys.core_clock_frequency / div;
+
+#if defined LPC_SC
+  LPC_SC->PCONP = (1 << PCGPIO) | (1 << PCRTC);
+#endif
 
   // validate div
   switch (div) {

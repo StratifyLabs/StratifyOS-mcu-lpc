@@ -31,6 +31,7 @@
          _priv_exec_code = .;
          *(.priv_exec_code)
          _epriv_code = .;
+				 . = ALIGN(32);
   } >flash
          
          
@@ -43,7 +44,6 @@
     *(.ARM.exidx* .gnu.linkonce.armexidx.*) 
   } >flash
   
-  . = ALIGN(4);
   __exidx_end = .;
   _etext = .;
 	_etcim = .;

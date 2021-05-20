@@ -21,7 +21,8 @@ SECTIONS {
   . = 0;
   .text : {
          _text = .;
-  		 *(.startup)
+				 _tcim = .;
+			 *(.startup)
   		 *(.reset_vector)
          *(.text)
          *(.init)
