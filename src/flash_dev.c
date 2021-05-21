@@ -31,7 +31,13 @@ static int get_page(void *addr);
 static int get_page_size(int page);
 static int get_page_addr(int page);
 
-static int get_last_bootloader_page() { return ((int)(&_etext) + 4095) / 4096; }
+static int get_last_bootloader_page() {
+  const bootloader_api_t * bootloader_api = cortexm_get_bootloader_api();
+  if( bootloader_api ){
+    return (bootloader_api->code_size + 4095) / 4096;
+  }
+  return 0;
+}
 
 DEVFS_MCU_DRIVER_IOCTL_FUNCTION(flash, FLASH_VERSION, FLASH_IOC_IDENT_CHAR,
                                 I_MCU_TOTAL + I_FLASH_TOTAL,
@@ -105,8 +111,8 @@ int mcu_flash_erasepage(const devfs_handle_t *handle, void *ctl) {
   u32 addr;
   int page_size;
   int page = (int)ctl;
-  int last_page = get_last_bootloader_page();
 
+  const int last_page = get_last_bootloader_page();
   if (page < last_page) {
     // Never erase the bootloader
     return SYSFS_SET_RETURN(EROFS);
@@ -161,7 +167,7 @@ int mcu_flash_writepage(const devfs_handle_t *handle, void *ctl) {
   int err;
   int nbyte;
   flash_writepage_t *wattr = ctl;
-  int boot_page_addr = get_page_addr(get_last_bootloader_page());
+  u32 boot_page_addr = get_page_addr(get_last_bootloader_page());
 
   if (wattr->addr < boot_page_addr) {
     return SYSFS_SET_RETURN(EROFS);
@@ -183,7 +189,7 @@ int mcu_flash_writepage(const devfs_handle_t *handle, void *ctl) {
     nbyte = 512;
   } else if (wattr->nbyte <= 1024) {
     nbyte = 1024;
-  } else if (wattr->nbyte > 1024) {
+  } else {
     nbyte = 1024;
   }
 
