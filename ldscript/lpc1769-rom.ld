@@ -3,8 +3,8 @@ EXTERN ( core_vector_table )
 
 MEMORY {
    flash : ORIGIN = 0, LENGTH = 512K
-	 ram : ORIGIN = 0x2007C000, LENGTH = 28K
-	 sysmem : ORIGIN = 0x20083000, LENGTH = 4K
+	 ram : ORIGIN = 0x2007C000, LENGTH = 16K
+	 sysmem : ORIGIN = 0x20080000, LENGTH = 16K
 }
 
 SECTIONS {

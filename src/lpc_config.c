@@ -5,7 +5,7 @@
 #include "lpc_arch.h"
 
 const tmr_config_t m_clock_tmr_config = {
-    .port = 4,
+    .port = 3,
     .attr = {
         .o_flags
         = TMR_FLAG_SET_TIMER | TMR_FLAG_IS_SOURCE_CPU | TMR_FLAG_IS_AUTO_RELOAD,
@@ -18,7 +18,7 @@ const tmr_config_t m_clock_tmr_config = {
             .channel[3] = {0xff, 0xff}}}};
 
 static const devfs_handle_t m_clock_tmr_handle
-    = {.port = 0, .state = NULL, .config = &m_clock_tmr_config};
+    = {.port = 3, .state = NULL, .config = &m_clock_tmr_config};
 
 void lpc_clock_initialize(
     int (*handle_match_channel0)(void *context, const mcu_event_t *data),
@@ -31,7 +31,7 @@ void lpc_clock_initialize(
 
   // Open the microsecond timer
   mcu_tmr_open(&m_clock_tmr_handle);
-  mcu_tmr_setattr(&m_clock_tmr_handle, NULL);
+  mcu_tmr_setattr(&m_clock_tmr_handle, (void*)&m_clock_tmr_config.attr);
 
   // Initialize the value of the timer to zero
   mcu_tmr_set(&m_clock_tmr_handle, (void *)0);
