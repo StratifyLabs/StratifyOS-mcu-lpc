@@ -447,7 +447,7 @@ int mcu_uart_read(const devfs_handle_t *handle, devfs_async_t *rop) {
   // initialize the transfer
   uart_local[port].rx_bufp = rop->buf;
   uart_local[port].rx_len = rop->nbyte;
-  uart_local[port].rx_nbyte = &rop->nbyte;
+  uart_local[port].rx_nbyte = &rop->result;
 
   // Check the local buffer for bytes that are immediately available
   read_rx_data(port);
@@ -492,6 +492,7 @@ int mcu_uart_write(const devfs_handle_t *handle, devfs_async_t *wop) {
   // Initialize variables
   uart_local[port].tx_bufp = wop->buf;
   uart_local[port].tx_len = wop->nbyte;
+  wop->result = wop->nbyte;
 
   // Check the local buffer for bytes that are immediately available
   uart_regs->TER = 0; // disable the transmitter

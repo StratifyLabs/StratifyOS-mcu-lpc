@@ -18,16 +18,14 @@
  */
 
 #include "lpc_local.h"
-#include <sos/boot/bootloader.h>
 #include <cortexm/cortexm.h>
 #include <cortexm/fault.h>
+#include <sos/boot/bootloader.h>
 #include <sos/config.h>
 #include <sos/symbols.h>
 
 static void core_init();
 extern int _main();
-
-
 
 #define _DECLARE_ISR(name)                                                     \
   void mcu_core_##name##_isr() MCU_ALIAS(mcu_core_default_isr)
@@ -265,7 +263,7 @@ void (*const mcu_core_vector_table[])() __attribute__((section(".startup"))) = {
 
 #if defined LPCXX7X_8X
 
-        _ISR(wdt), // 0
+    _ISR(wdt), // 0
     _ISR(tmr0),
     _ISR(tmr1),
     _ISR(tmr2),
@@ -372,4 +370,3 @@ void core_init() {
 }
 
 void mcu_core_default_isr() { sos_handle_event(SOS_EVENT_ROOT_FATAL, "dflt"); }
-

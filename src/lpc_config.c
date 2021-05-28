@@ -6,19 +6,19 @@
 
 const tmr_config_t m_clock_tmr_config = {
     .port = 3,
-    .attr = {
-        .o_flags
-        = TMR_FLAG_SET_TIMER | TMR_FLAG_IS_SOURCE_CPU | TMR_FLAG_IS_AUTO_RELOAD,
-        .period = SOS_USECOND_PERIOD,
-        .freq = 1000000UL,
-        .pin_assignment = {
-            .channel[0] = {0xff, 0xff},
-            .channel[1] = {0xff, 0xff},
-            .channel[2] = {0xff, 0xff},
-            .channel[3] = {0xff, 0xff}}}};
+    .attr = {.o_flags = TMR_FLAG_SET_TIMER | TMR_FLAG_IS_SOURCE_CPU |
+                        TMR_FLAG_SET_CHANNEL |
+                        TMR_FLAG_IS_CHANNEL_RESET_ON_MATCH,
+             .period = SOS_USECOND_PERIOD,
+             .channel = {2, SOS_USECOND_PERIOD},
+             .freq = 1000000UL,
+             .pin_assignment = {.channel[0] = {0xff, 0xff},
+                                .channel[1] = {0xff, 0xff},
+                                .channel[2] = {0xff, 0xff},
+                                .channel[3] = {0xff, 0xff}}}};
 
-static const devfs_handle_t m_clock_tmr_handle
-    = {.port = 3, .state = NULL, .config = &m_clock_tmr_config};
+static const devfs_handle_t m_clock_tmr_handle = {
+    .port = 3, .state = NULL, .config = &m_clock_tmr_config};
 
 void lpc_clock_initialize(
     int (*handle_match_channel0)(void *context, const mcu_event_t *data),
@@ -26,21 +26,24 @@ void lpc_clock_initialize(
     int (*handle_overflow)(void *context, const mcu_event_t *data)) {
   // use TIM2 -- 32-bit timer
 
-  mcu_action_t action;
-  mcu_channel_t chan_req;
-
   // Open the microsecond timer
   mcu_tmr_open(&m_clock_tmr_handle);
-  mcu_tmr_setattr(&m_clock_tmr_handle, (void*)&m_clock_tmr_config.attr);
+  mcu_tmr_setattr(&m_clock_tmr_handle, (void *)&m_clock_tmr_config.attr);
 
   // Initialize the value of the timer to zero
   mcu_tmr_set(&m_clock_tmr_handle, (void *)0);
 
+  mcu_channel_t chan_req;
+  chan_req.loc = 2;
+  chan_req.value = SOS_USECOND_PERIOD;
+  lpc_clock_set_channel(&chan_req);
+
+  mcu_action_t action;
   action.prio = 0;
-  action.channel = 0; // doesn't matter
-  action.o_events = MCU_EVENT_FLAG_OVERFLOW;
+  action.channel = 2;
+  action.o_events = MCU_EVENT_FLAG_MATCH;
   action.handler.callback = handle_overflow;
-  action.handler.context = 0;
+  action.handler.context = NULL;
   mcu_tmr_setaction(&m_clock_tmr_handle, &action);
 
   // This sets up the output compare unit used with the usleep() function
@@ -49,9 +52,7 @@ void lpc_clock_initialize(
   lpc_clock_set_channel(&chan_req);
 
   action.channel = 0;
-  action.o_events = MCU_EVENT_FLAG_MATCH;
   action.handler.callback = handle_match_channel0;
-  action.handler.context = 0;
   mcu_tmr_setaction(&m_clock_tmr_handle, &action);
 
   chan_req.loc = 0;
@@ -59,18 +60,14 @@ void lpc_clock_initialize(
 
   if (handle_match_channel1) {
     action.channel = 1;
-    action.o_events = MCU_EVENT_FLAG_MATCH;
     action.handler.callback = handle_match_channel1;
-    action.handler.context = 0;
     mcu_tmr_setaction(&m_clock_tmr_handle, &action);
   }
 
   lpc_clock_enable();
 }
 
-void lpc_clock_enable() {
-  mcu_tmr_enable(&m_clock_tmr_handle, NULL);
-}
+void lpc_clock_enable() { mcu_tmr_enable(&m_clock_tmr_handle, NULL); }
 
 u32 lpc_clock_disable() {
   mcu_tmr_disable(&m_clock_tmr_handle, NULL);

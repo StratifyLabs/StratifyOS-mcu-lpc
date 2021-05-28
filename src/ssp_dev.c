@@ -1,4 +1,4 @@
-/* Copyright 2011-2016 Tyler Gilbert; 
+/* Copyright 2011-2016 Tyler Gilbert;
  * This file is part of Stratify OS.
  *
  * Stratify OS is free software: you can redistribute it and/or modify
@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Stratify OS.  If not, see <http://www.gnu.org/licenses/>. */
 
-
 #include <mcu/spi.h>
 
 #include "lpc_local.h"
@@ -23,362 +22,358 @@
 #if MCU_SSP_PORTS > 0
 
 typedef struct {
-	char * volatile rx_buf;
-	char * volatile tx_buf;
-	volatile int size;
-	void * duplex_mem;
-	int ret;
-	uint8_t pin_assign;
-	uint8_t width;
-	uint8_t ref_count;
-	mcu_event_handler_t handler;
+  char *volatile rx_buf;
+  char *volatile tx_buf;
+  volatile int size;
+  void *duplex_mem;
+  int ret;
+  uint8_t pin_assign;
+  uint8_t width;
+  uint8_t ref_count;
+  mcu_event_handler_t handler;
 } ssp_local_t;
 
 static ssp_local_t ssp_local[MCU_SSP_PORTS] MCU_SYS_MEM;
 
-static int ssp_port_transfer(const devfs_handle_t * handle, int is_read, devfs_async_t * dop);
-static void ssp_fill_tx_fifo(int port, LPC_SSP_Type * regs);
-static void ssp_empty_rx_fifo(int port, LPC_SSP_Type * regs);
+static int ssp_port_transfer(const devfs_handle_t *handle, int is_read,
+                             devfs_async_t *dop);
+static void ssp_fill_tx_fifo(int port, LPC_SSP_Type *regs);
+static void ssp_empty_rx_fifo(int port, LPC_SSP_Type *regs);
 static int byte_swap(int port, int byte);
 
-static LPC_SSP_Type * const ssp_regs_table[MCU_SSP_PORTS] = MCU_SSP_REGS;
+static LPC_SSP_Type *const ssp_regs_table[MCU_SSP_PORTS] = MCU_SSP_REGS;
 static u8 const ssp_irqs[MCU_SSP_PORTS] = MCU_SSP_IRQS;
 
 #ifdef LPCXX7X_8X
-static void enable_pin(const mcu_pin_t * pin, void * arg) MCU_PRIV_CODE;
-void enable_pin(const mcu_pin_t * pin, void * arg){
-	//put the pin in fast mode
-	pio_attr_t pattr;
-	devfs_handle_t pio_handle;
-	pio_handle.config = 0;
-	pattr.o_pinmask = (1<<pin->pin);
-	pattr.o_flags = PIO_FLAG_SET_OUTPUT|PIO_FLAG_IS_SPEED_BLAZING|PIO_FLAG_IS_HYSTERESIS;
-	pio_handle.port = pin->port;
-	mcu_pio_setattr(&pio_handle, &pattr);
+static void enable_pin(const mcu_pin_t *pin, void *arg) MCU_PRIV_CODE;
+void enable_pin(const mcu_pin_t *pin, void *arg) {
+  // put the pin in fast mode
+  pio_attr_t pattr;
+  devfs_handle_t pio_handle;
+  pio_handle.config = 0;
+  pattr.o_pinmask = (1 << pin->pin);
+  pattr.o_flags =
+      PIO_FLAG_SET_OUTPUT | PIO_FLAG_IS_SPEED_BLAZING | PIO_FLAG_IS_HYSTERESIS;
+  pio_handle.port = pin->port;
+  mcu_pio_setattr(&pio_handle, &pattr);
 }
 #else
 #define enable_pin 0
 #endif
 
-DEVFS_MCU_DRIVER_IOCTL_FUNCTION(ssp, SPI_VERSION, SPI_IOC_IDENT_CHAR, I_MCU_TOTAL + I_SPI_TOTAL, mcu_ssp_swap)
+DEVFS_MCU_DRIVER_IOCTL_FUNCTION(ssp, SPI_VERSION, SPI_IOC_IDENT_CHAR,
+                                I_MCU_TOTAL + I_SPI_TOTAL, mcu_ssp_swap)
 
-int mcu_ssp_open(const devfs_handle_t * handle){
-	int port = handle->port;
-	if ( ssp_local[port].ref_count == 0 ){
+int mcu_ssp_open(const devfs_handle_t *handle) {
+  int port = handle->port;
+  if (ssp_local[port].ref_count == 0) {
 
-		cortexm_enable_irq(ssp_irqs[port]);
+    cortexm_enable_irq(ssp_irqs[port]);
 
-		switch(port){
-			case 0:
-				mcu_lpc_core_enable_pwr(PCSSP0);
-				break;
+    switch (port) {
+    case 0:
+      mcu_lpc_core_enable_pwr(PCSSP0);
+      break;
 
-			case 1:
-				mcu_lpc_core_enable_pwr(PCSSP1);
-				break;
+    case 1:
+      mcu_lpc_core_enable_pwr(PCSSP1);
+      break;
 
 #if MCU_SSP_PORTS > 2
-			case 2:
-				mcu_lpc_core_enable_pwr(PCSSP2);
-				break;
+    case 2:
+      mcu_lpc_core_enable_pwr(PCSSP2);
+      break;
 #endif
-		}
-		ssp_local[port].duplex_mem = NULL;
-		ssp_local[port].handler.callback = NULL;
-	}
-	ssp_local[port].ref_count++;
-	return 0;
+    }
+    ssp_local[port].duplex_mem = NULL;
+    ssp_local[port].handler.callback = NULL;
+  }
+  ssp_local[port].ref_count++;
+  return 0;
 }
 
-int mcu_ssp_close(const devfs_handle_t * handle){
-	int port = handle->port;
-	if ( ssp_local[port].ref_count > 0 ){
-		if ( ssp_local[port].ref_count == 1 ){
+int mcu_ssp_close(const devfs_handle_t *handle) {
+  int port = handle->port;
+  if (ssp_local[port].ref_count > 0) {
+    if (ssp_local[port].ref_count == 1) {
 
-			cortexm_disable_irq(ssp_irqs[port]);
+      cortexm_disable_irq(ssp_irqs[port]);
 
-			switch(port){
-				case 0:
-					mcu_lpc_core_disable_pwr(PCSSP0);
-					break;
-				case 1:
-					mcu_lpc_core_disable_pwr(PCSSP1);
-					break;
+      switch (port) {
+      case 0:
+        mcu_lpc_core_disable_pwr(PCSSP0);
+        break;
+      case 1:
+        mcu_lpc_core_disable_pwr(PCSSP1);
+        break;
 #ifdef LPCXX7X_8X
-				case 2:
-					mcu_lpc_core_disable_pwr(PCSSP2);
-					break;
+      case 2:
+        mcu_lpc_core_disable_pwr(PCSSP2);
+        break;
 #endif
-			}
-		}
-		ssp_local[port].ref_count--;
-	}
-	return 0;
+      }
+    }
+    ssp_local[port].ref_count--;
+  }
+  return 0;
 }
 
-int mcu_ssp_getinfo(const devfs_handle_t * handle, void * ctl){
-	spi_info_t * info = ctl;
+int mcu_ssp_getinfo(const devfs_handle_t *handle, void *ctl) {
+  spi_info_t *info = ctl;
 
-	//set flags
-	info->o_flags = 0;
-	return 0;
+  // set flags
+  info->o_flags = 0;
+  return 0;
 }
 
-int mcu_ssp_setattr(const devfs_handle_t * handle, void * ctl){
-	int port = handle->port;
-	LPC_SSP_Type * regs;
-	u32 cr0, cr1, cpsr;
-	u32 tmp;
+int mcu_ssp_setattr(const devfs_handle_t *handle, void *ctl) {
+  int port = handle->port;
+  LPC_SSP_Type *regs;
+  u32 cr0, cr1, cpsr;
+  u32 tmp;
 
-	const spi_attr_t * attr = mcu_select_attr(handle, ctl);
-	if( attr == 0 ){
-		return SYSFS_SET_RETURN(EINVAL);
-	}
+  const spi_attr_t *attr = mcu_select_attr(handle, ctl);
+  if (attr == 0) {
+    return SYSFS_SET_RETURN(EINVAL);
+  }
 
-	u32 o_flags = attr->o_flags;
-	u32 mode;
+  u32 o_flags = attr->o_flags;
+  u32 mode;
 
-	regs = ssp_regs_table[port];
+  regs = ssp_regs_table[port];
 
-	if( o_flags & SPI_FLAG_SET_MASTER ){
+  if (o_flags & SPI_FLAG_SET_MASTER) {
 
-		if( attr->freq == 0 ){
-			return SYSFS_SET_RETURN(EINVAL);
-		}
+    if (attr->freq == 0) {
+      return SYSFS_SET_RETURN(EINVAL);
+    }
 
-		if ( (attr->width < 4) && (attr->width > 16) ){
-			return SYSFS_SET_RETURN(EINVAL);
-		}
+    if ((attr->width < 4) && (attr->width > 16)) {
+      return SYSFS_SET_RETURN(EINVAL);
+    }
 
-		mode = 0;
-		if( o_flags & SPI_FLAG_IS_MODE1 ){
-			mode = 1;
-		} else if( o_flags & SPI_FLAG_IS_MODE2 ){
-			mode = 2;
-		} else if( o_flags & SPI_FLAG_IS_MODE3 ){
-			mode = 3;
-		}
+    mode = 0;
+    if (o_flags & SPI_FLAG_IS_MODE1) {
+      mode = 1;
+    } else if (o_flags & SPI_FLAG_IS_MODE2) {
+      mode = 2;
+    } else if (o_flags & SPI_FLAG_IS_MODE3) {
+      mode = 3;
+    }
 
-		cr0 = 0;
-		cr1 = (1<<1); //set the enable
+    cr0 = 0;
+    cr1 = (1 << 1); // set the enable
 
-		tmp = lpc_config.clock_peripheral_freq / attr->freq;
-		tmp = ( tmp > 255 ) ? 254 : tmp;
-		tmp = ( tmp < 2 ) ? 2 : tmp;
-		if ( tmp & 0x01 ){
-			tmp++; //round the divisor up so that actual is less than the target
-		}
-		cpsr = tmp;
+    tmp = lpc_config.clock_peripheral_freq / attr->freq;
+    tmp = (tmp > 255) ? 254 : tmp;
+    tmp = (tmp < 2) ? 2 : tmp;
+    if (tmp & 0x01) {
+      tmp++; // round the divisor up so that actual is less than the target
+    }
+    cpsr = tmp;
 
-		if ( mode & 0x01 ){
-			cr0 |= (1<<7);
-		}
-		if ( mode & 0x02 ){
-			cr0 |= (1<<6);
-		}
+    if (mode & 0x01) {
+      cr0 |= (1 << 7);
+    }
+    if (mode & 0x02) {
+      cr0 |= (1 << 6);
+    }
 
-		cr0 |= ( attr->width - 1);
+    cr0 |= (attr->width - 1);
 
-		//default mode is SPI
-		if ( o_flags & SPI_FLAG_IS_FORMAT_TI ){
-			cr0 |= (1<<4);
-		} else if ( o_flags & SPI_FLAG_IS_FORMAT_MICROWIRE ){
-			cr0 |= (1<<5);
-		}
+    // default mode is SPI
+    if (o_flags & SPI_FLAG_IS_FORMAT_TI) {
+      cr0 |= (1 << 4);
+    } else if (o_flags & SPI_FLAG_IS_FORMAT_MICROWIRE) {
+      cr0 |= (1 << 5);
+    }
 
-		if( mcu_set_pin_assignment(
-				 &(attr->pin_assignment),
-				 MCU_CONFIG_PIN_ASSIGNMENT(spi_config_t, handle),
-				 MCU_PIN_ASSIGNMENT_COUNT(spi_pin_assignment_t),
-				 CORE_PERIPH_SSP, port, enable_pin, 0,  0) < 0 ){
-			return SYSFS_SET_RETURN(EINVAL);
-		}
+    if (mcu_set_pin_assignment(&(attr->pin_assignment),
+                               MCU_CONFIG_PIN_ASSIGNMENT(spi_config_t, handle),
+                               MCU_PIN_ASSIGNMENT_COUNT(spi_pin_assignment_t),
+                               CORE_PERIPH_SSP, port, enable_pin, 0, 0) < 0) {
+      return SYSFS_SET_RETURN(EINVAL);
+    }
 
-		regs->CR0 = cr0;
-		regs->CR1 = cr1;
-		regs->CPSR = cpsr;
-		regs->IMSC = 0;
+    regs->CR0 = cr0;
+    regs->CR1 = cr1;
+    regs->CPSR = cpsr;
+    regs->IMSC = 0;
+  }
 
-	}
-
-	return 0;
+  return 0;
 }
 
-int mcu_ssp_swap(const devfs_handle_t * handle, void * ctl){
-	int port = handle->port;
-	return byte_swap(port, (int)ctl);
+int mcu_ssp_swap(const devfs_handle_t *handle, void *ctl) {
+  int port = handle->port;
+  return byte_swap(port, (int)ctl);
 }
 
-int mcu_ssp_setduplex(const devfs_handle_t * handle, void * ctl){
-	int port = handle->port;
-	ssp_local[port].duplex_mem = (void * volatile)ctl;
-	return 0;
+int mcu_ssp_setduplex(const devfs_handle_t *handle, void *ctl) {
+  int port = handle->port;
+  ssp_local[port].duplex_mem = (void *volatile)ctl;
+  return 0;
 }
 
-static void exec_callback(int port, LPC_SSP_Type * regs, u32 o_events){
-	mcu_execute_event_handler(&(ssp_local[port].handler), o_events, 0);
+static void exec_callback(int port, LPC_SSP_Type *regs, u32 o_events) {
+  mcu_execute_event_handler(&(ssp_local[port].handler), o_events, 0);
 
-	//if the callback is null, disable the interrupts
-	if( ssp_local[port].handler.callback == 0 ){
-		regs->IMSC &= ~(SSPIMSC_RXIM|SSPIMSC_RTIM);
-	}
+  // if the callback is null, disable the interrupts
+  if (ssp_local[port].handler.callback == 0) {
+    regs->IMSC &= ~(SSPIMSC_RXIM | SSPIMSC_RTIM);
+  }
 }
 
+int mcu_ssp_setaction(const devfs_handle_t *handle, void *ctl) {
+  int port = handle->port;
+  mcu_action_t *action = (mcu_action_t *)ctl;
+  LPC_SSP_Type *regs;
+  regs = ssp_regs_table[port];
 
-int mcu_ssp_setaction(const devfs_handle_t * handle, void * ctl){
-	int port = handle->port;
-	mcu_action_t * action = (mcu_action_t*)ctl;
-	LPC_SSP_Type * regs;
-	regs = ssp_regs_table[port];
+  if (action->handler.callback == 0) {
+    if (action->o_events &
+        (MCU_EVENT_FLAG_DATA_READY | MCU_EVENT_FLAG_WRITE_COMPLETE)) {
+      exec_callback(port, regs, MCU_EVENT_FLAG_CANCELED);
+      ssp_local[port].handler.callback = 0;
+      regs->IMSC &= ~(SSPIMSC_RXIM | SSPIMSC_RTIM);
+    }
+    return 0;
+  }
 
-	if( action->handler.callback == 0 ){
-		if ( action->o_events & (MCU_EVENT_FLAG_DATA_READY|MCU_EVENT_FLAG_WRITE_COMPLETE) ){
-			exec_callback(port, regs, MCU_EVENT_FLAG_CANCELED);
-			ssp_local[port].handler.callback = 0;
-			regs->IMSC &= ~(SSPIMSC_RXIM|SSPIMSC_RTIM);
-		}
-		return 0;
-	}
+  if (cortexm_validate_callback(action->handler.callback) < 0) {
+    return SYSFS_SET_RETURN(EPERM);
+  }
 
-	if( cortexm_validate_callback(action->handler.callback) < 0 ){
-		return SYSFS_SET_RETURN(EPERM);
-	}
+  ssp_local[port].handler.callback = action->handler.callback;
+  ssp_local[port].handler.context = action->handler.context;
 
-	ssp_local[port].handler.callback = action->handler.callback;
-	ssp_local[port].handler.context = action->handler.context;
+  cortexm_set_irq_priority(ssp_irqs[port], action->prio, action->o_events);
 
-	cortexm_set_irq_priority(ssp_irqs[port], action->prio, action->o_events);
-
-
-	return 0;
+  return 0;
 }
 
-int byte_swap(int port, int byte){
-	LPC_SSP_Type * regs;
-	regs = ssp_regs_table[port];
+int byte_swap(int port, int byte) {
+  LPC_SSP_Type *regs;
+  regs = ssp_regs_table[port];
 
-	//make sure the RX fifo is empty
-	while( regs->SR & SSPSR_RNE ){
-		byte = regs->DR;
-	}
+  // make sure the RX fifo is empty
+  while (regs->SR & SSPSR_RNE) {
+    byte = regs->DR;
+  }
 
-	regs->DR = byte;
+  regs->DR = byte;
 
-	while ( (regs->SR & SSPSR_BSY)  || !(regs->SR & SSPSR_RNE) ){
-		;
-	}
+  while ((regs->SR & SSPSR_BSY) || !(regs->SR & SSPSR_RNE)) {
+    ;
+  }
 
-	byte = regs->DR; //read the byte to empty the RX FIFO
+  byte = regs->DR; // read the byte to empty the RX FIFO
 
-	return byte;
-
+  return byte;
 }
 
-int mcu_ssp_write(const devfs_handle_t * handle, devfs_async_t * wop){
-	return ssp_port_transfer(handle, 0, wop);
+int mcu_ssp_write(const devfs_handle_t *handle, devfs_async_t *wop) {
+  return ssp_port_transfer(handle, 0, wop);
 }
 
-int mcu_ssp_read(const devfs_handle_t * handle, devfs_async_t * rop){
-	return ssp_port_transfer(handle, 1, rop);
+int mcu_ssp_read(const devfs_handle_t *handle, devfs_async_t *rop) {
+  return ssp_port_transfer(handle, 1, rop);
 }
 
-void ssp_fill_tx_fifo(int port, LPC_SSP_Type * regs){
-	int size = 0;
-	u8 data;
-	while ( (regs->SR & SSPSR_TNF) && ssp_local[port].size && (size < 4) ){
-		if ( ssp_local[port].tx_buf != NULL ){
-			data = *ssp_local[port].tx_buf++;
-		} else {
-			//fill with dummy data
-			data = 0xFF;
-		}
+void ssp_fill_tx_fifo(int port, LPC_SSP_Type *regs) {
+  int size = 0;
+  u8 data;
+  while ((regs->SR & SSPSR_TNF) && ssp_local[port].size && (size < 4)) {
+    if (ssp_local[port].tx_buf != NULL) {
+      data = *ssp_local[port].tx_buf++;
+    } else {
+      // fill with dummy data
+      data = 0xFF;
+    }
 
-		regs->DR = data;
-		ssp_local[port].size--;
-		size++; //only send 4 bytes at a time so that the RX can keep up
-	}
+    regs->DR = data;
+    ssp_local[port].size--;
+    size++; // only send 4 bytes at a time so that the RX can keep up
+  }
 }
 
-void ssp_empty_rx_fifo(int port, LPC_SSP_Type * regs){
-	u8 data;
-	while ( regs->SR & SSPSR_RNE ){
-		data = regs->DR;
-		if ( ssp_local[port].rx_buf != NULL ){
-			*ssp_local[port].rx_buf++ = data; //save the dat
-		}
-	}
+void ssp_empty_rx_fifo(int port, LPC_SSP_Type *regs) {
+  u8 data;
+  while (regs->SR & SSPSR_RNE) {
+    data = regs->DR;
+    if (ssp_local[port].rx_buf != NULL) {
+      *ssp_local[port].rx_buf++ = data; // save the dat
+    }
+  }
 }
 
-void mcu_core_ssp_isr(int port){
-	LPC_SSP_Type * regs;
-	regs = ssp_regs_table[port];
-	regs->ICR |= (1<<SSPICR_RTIC);
-	ssp_empty_rx_fifo(port, regs);
-	ssp_fill_tx_fifo(port, regs);
-	if ( !(regs->SR & (SSPSR_RNE)) && !(regs->SR & SSPSR_BSY) && (ssp_local[port].size == 0) ){ //empty receive fifo and not busy transmitting
-		exec_callback(port, regs, 0);
-	}
+void mcu_core_ssp_isr(int port) {
+  LPC_SSP_Type *regs;
+  regs = ssp_regs_table[port];
+  regs->ICR |= (1 << SSPICR_RTIC);
+  ssp_empty_rx_fifo(port, regs);
+  ssp_fill_tx_fifo(port, regs);
+  if (!(regs->SR & (SSPSR_RNE)) && !(regs->SR & SSPSR_BSY) &&
+      (ssp_local[port].size ==
+       0)) { // empty receive fifo and not busy transmitting
+    exec_callback(port, regs, 0);
+  }
 }
 
-void mcu_core_ssp0_isr(){
-	mcu_core_ssp_isr(0);
-}
+void mcu_core_ssp0_isr() { mcu_core_ssp_isr(0); }
 
-void mcu_core_ssp1_isr(){
-	mcu_core_ssp_isr(1);
-}
+void mcu_core_ssp1_isr() { mcu_core_ssp_isr(1); }
 
-void mcu_core_ssp2_isr(){
-	mcu_core_ssp_isr(2);
-}
+void mcu_core_ssp2_isr() { mcu_core_ssp_isr(2); }
 
-int ssp_port_transfer(const devfs_handle_t * handle, int is_read, devfs_async_t * dop){
-	int port = handle->port;
-	int size;
-	LPC_SSP_Type * regs;
-	size = dop->nbyte;
+int ssp_port_transfer(const devfs_handle_t *handle, int is_read,
+                      devfs_async_t *dop) {
+  int port = handle->port;
+  int size;
+  LPC_SSP_Type *regs;
+  size = dop->nbyte;
+  regs = ssp_regs_table[port];
 
+  // Check to see if SSP port is busy
+  if (ssp_local[port].handler.callback) {
+    return SYSFS_SET_RETURN(EBUSY);
+  }
 
-	regs = ssp_regs_table[port];
+  if (size == 0) {
+    return 0;
+  }
 
-	//Check to see if SSP port is busy
-	if ( ssp_local[port].handler.callback ){
-		return SYSFS_SET_RETURN(EBUSY);
-	}
+  if (is_read) {
+    ssp_local[port].rx_buf = dop->buf;
+    ssp_local[port].tx_buf = ssp_local[port].duplex_mem;
+  } else {
+    ssp_local[port].tx_buf = dop->buf;
+    ssp_local[port].rx_buf = ssp_local[port].duplex_mem;
+  }
+  ssp_local[port].size = size;
+  dop->result = dop->nbyte;
 
-	if ( size == 0 ){
-		return 0;
-	}
+  if (cortexm_validate_callback(dop->handler.callback) < 0) {
+    return SYSFS_SET_RETURN(EPERM);
+  }
 
-	if ( is_read ){
-		ssp_local[port].rx_buf = dop->buf;
-		ssp_local[port].tx_buf = ssp_local[port].duplex_mem;
-	} else {
-		ssp_local[port].tx_buf = dop->buf;
-		ssp_local[port].rx_buf = ssp_local[port].duplex_mem;
-	}
-	ssp_local[port].size = size;
+  // empty RX fifo
+  while (regs->SR & SSPSR_RNE) {
+    regs->DR;
+  }
 
-	if( cortexm_validate_callback(dop->handler.callback) < 0 ){
-		return SYSFS_SET_RETURN(EPERM);
-	}
+  ssp_local[port].handler.callback = dop->handler.callback;
+  ssp_local[port].handler.context = dop->handler.context;
 
-	//empty RX fifo
-	while( regs->SR & SSPSR_RNE ){
-		regs->DR;
-	}
+  // fill the TX buffer
+  ssp_fill_tx_fifo(port, regs);
 
-	ssp_local[port].handler.callback = dop->handler.callback;
-	ssp_local[port].handler.context = dop->handler.context;
+  regs->IMSC |=
+      (SSPIMSC_RXIM |
+       SSPIMSC_RTIM); // when RX is half full or a timeout, get the bytes
+  ssp_local[port].ret = size;
 
-	//fill the TX buffer
-	ssp_fill_tx_fifo(port, regs);
-
-	regs->IMSC |= (SSPIMSC_RXIM|SSPIMSC_RTIM); //when RX is half full or a timeout, get the bytes
-	ssp_local[port].ret = size;
-
-	return 0;
+  return 0;
 }
 
 #endif
-

@@ -144,7 +144,7 @@ int mcu_tmr_setattr(const devfs_handle_t *handle, void *ctl) {
     return SYSFS_SET_RETURN(EINVAL);
   }
 
-  u32 o_flags = attr->o_flags;
+  const u32 o_flags = attr->o_flags;
   regs = tmr_regs_table[port];
 
   if (o_flags & TMR_FLAG_SET_TIMER) {
@@ -185,7 +185,7 @@ int mcu_tmr_setattr(const devfs_handle_t *handle, void *ctl) {
   }
 
   if (o_flags & TMR_FLAG_SET_CHANNEL) {
-    u32 chan = attr->channel.loc & ~MCU_CHANNEL_FLAG_IS_INPUT;
+    const u32 chan = attr->channel.loc & ~MCU_CHANNEL_FLAG_IS_INPUT;
 
     // Check for reset action
     if (o_flags & TMR_FLAG_IS_CHANNEL_RESET_ON_MATCH) { // reset on match
