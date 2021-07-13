@@ -133,6 +133,8 @@ void mcu_wdt_reset(){
 	LPC_WDT->FEED = 0x55;
 }
 
+void mcu_core_wdt_isr() MCU_WEAK;
+
 void mcu_core_wdt_isr(){
 	register void * handler_stack;
 	asm volatile ("MRS %0, msp\n\t" : "=r" (handler_stack) );
