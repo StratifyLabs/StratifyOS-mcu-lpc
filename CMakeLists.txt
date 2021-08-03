@@ -22,7 +22,7 @@ project(${SOS_NAME} C ASM)
 
 set(SOS_INCLUDE_DIRECTORIES include)
 
-option(BUILD_ALL "Build Lpc17xx device family" OFF)
+option(BUILD_LPC_ALL "Build all LPC device families" ON)
 option(BUILD_LPC17XX "Build Lpc17xx device family" OFF)
 option(BUILD_LPC40XX "Build Lpc40xx device family" OFF)
 
@@ -71,12 +71,12 @@ function(add_targets FAMILY MCU CHIP VARIANT VARIANT_DEFINE ARCH)
 	sos_sdk_library("${DEBUG_OPTIONS}")
 endfunction()
 
-if(BUILD_ALL OR BUILD_LPC17XX)
+if(BUILD_LPC_ALL OR BUILD_LPC17XX)
 	add_targets(lpc17 lpc17xx LPC17xx mcu_lpc17xx __lpc17xx v7m)
 
 endif()
 
-if(BUILD_ALL OR BUILD_LPC40XX)
+if(BUILD_LPC_ALL OR BUILD_LPC40XX)
 	add_targets(lpc40 lpc407x_8x LPC407x_8x_177x_8x mcu_lpc407x_8x __lpc407x_8x v7em_f4sh)
 
 endif()
