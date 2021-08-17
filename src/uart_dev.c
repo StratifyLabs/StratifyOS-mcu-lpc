@@ -210,7 +210,7 @@ int mcu_uart_close(const devfs_handle_t *handle) {
 }
 
 int mcu_uart_getinfo(const devfs_handle_t *handle, void *ctl) {
-
+  MCU_UNUSED_ARGUMENT(handle);
   uart_info_t *info = ctl;
 
   info->o_flags = UART_FLAG_IS_PARITY_NONE | UART_FLAG_IS_PARITY_ODD |
@@ -221,30 +221,24 @@ int mcu_uart_getinfo(const devfs_handle_t *handle, void *ctl) {
 }
 
 int mcu_uart_setattr(const devfs_handle_t *handle, void *ctl) {
-  u32 baud_rate;
-  u8 baud_low;
-  u8 baud_high;
-  u8 lcr;
-  u32 f_div;
-  LPC_UART_Type *uart_regs;
-  u32 o_flags;
   int port = handle->port;
 
   const uart_attr_t *attr = mcu_select_attr(handle, ctl);
-  if (attr == 0) {
+  if (attr == NULL) {
     return SYSFS_SET_RETURN(EINVAL);
   }
 
-  uart_regs = uart_regs_table[port];
-  o_flags = attr->o_flags;
+  LPC_UART_Type *uart_regs = uart_regs_table[port];
+  u32 o_flags = attr->o_flags;
 
+  u32 baud_rate;
   if (attr->freq != 0) {
     baud_rate = attr->freq;
   } else {
     return SYSFS_SET_RETURN(EINVAL);
   }
 
-  lcr = 0;
+  u8 lcr = 0;
 
   if (o_flags & UART_FLAG_IS_STOP2) {
     lcr |= ULCR_STOP_2;
@@ -276,10 +270,10 @@ int mcu_uart_setattr(const devfs_handle_t *handle, void *ctl) {
   uart_regs->IIR;
 
   uart_regs->LCR = ULCR_DLAB_ENABLE;
-  f_div = (lpc_config.clock_peripheral_freq + attr->width * baud_rate) /
+  const u32 f_div = (lpc_config.clock_peripheral_freq + attr->width * baud_rate) /
           (baud_rate * 16); // calculate the divisor
-  baud_low = f_div & 0xFF;
-  baud_high = (f_div >> 8) & 0xFF;
+  const u8 baud_low = f_div & 0xFF;
+  const u8 baud_high = (f_div >> 8) & 0xFF;
   uart_regs->DLM = baud_high;
   uart_regs->DLL = baud_low;
 
@@ -447,6 +441,7 @@ int mcu_uart_read(const devfs_handle_t *handle, devfs_async_t *rop) {
   // initialize the transfer
   uart_local[port].rx_bufp = rop->buf;
   uart_local[port].rx_len = rop->nbyte;
+  rop->result = rop->nbyte;
   uart_local[port].rx_nbyte = &rop->result;
 
   // Check the local buffer for bytes that are immediately available
@@ -458,7 +453,6 @@ int mcu_uart_read(const devfs_handle_t *handle, devfs_async_t *rop) {
       uart_local[port].rx_bufp = NULL;
       rop->nbyte = 0;
       len = SYSFS_SET_RETURN(EAGAIN);
-      ;
     } else {
       if (cortexm_validate_callback(rop->handler.callback) < 0) {
         return SYSFS_SET_RETURN(EPERM);
@@ -506,7 +500,6 @@ int mcu_uart_write(const devfs_handle_t *handle, devfs_async_t *wop) {
   uart_local[port].write.context = wop->handler.context;
   uart_regs->IER |= UIER_ETBEI; // enable the transmit interrupt
   uart_regs->TER = UTER_TXEN;   // enable the transmitter
-
   return 0;
 }
 
