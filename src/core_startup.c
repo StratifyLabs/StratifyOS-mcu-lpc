@@ -194,7 +194,7 @@ void (*const mcu_core_vector_table[])() __attribute__((section(".startup"))) = {
     cortexm_memfault_handler,      // The MPU fault handler
     cortexm_busfault_handler,      // The bus fault handler
     cortexm_usagefault_handler,    // The usage fault handler
-    (void *)&_sos_hardware_id,     // hardware ID
+    (void *)&_sos_hardware_id,     // For the bootloader, this is changed to a checksum
     0,                             // Reserved
     (void *)&sos_config.boot.api,  // boot API pointer
     0,                             // Reserved
