@@ -57,7 +57,7 @@ typedef union {
   u8 ptr8[2];
 } i2c_ptr_t;
 
-typedef struct MCU_PACK {
+typedef struct {
   mcu_event_handler_t handler;
   char *volatile data;
   int *ret;
@@ -65,7 +65,7 @@ typedef struct MCU_PACK {
   u16 resd;
 } i2c_local_transfer_t;
 
-typedef struct MCU_PACK {
+typedef struct {
   // i2c_slave_setup_t setup;
   u32 size;
   char *data;
@@ -73,7 +73,7 @@ typedef struct MCU_PACK {
   i2c_ptr_t ptr;
 } i2c_local_slave_t;
 
-typedef struct MCU_PACK {
+typedef struct {
   u8 ref_count;
   volatile u8 state;
   volatile u8 err;
