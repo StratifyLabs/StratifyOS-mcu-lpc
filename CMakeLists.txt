@@ -1,32 +1,18 @@
 cmake_minimum_required (VERSION 3.6)
 
-if(NOT SOS_SDK_PATH)
-	set(SOS_SDK_PATH $ENV{SOS_SDK_PATH})
-endif()
-
-set(CMAKE_MODULE_PATH ${SOS_SDK_PATH}/cmake)
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_MODULE_PATH}/sos-toolchain.cmake)
-include(sos-sdk)
-
 set(SOS_NAME sos)
 project(StratifyOS-mcu-stm32 C ASM)
 
-if(NOT API_IS_SDK)
-	include(StratifyOS)
-endif()
+set(CMSDK_NAME StratifyOS-mcu-lpc)
+project(${CMSDK_NAME} C ASM)
 
-set(SOS_NAME StratifyOS-mcu-lpc)
-project(${SOS_NAME} C ASM)
-#Add sources to the project
-
-
-set(SOS_INCLUDE_DIRECTORIES include)
+set(CMSDK_INCLUDE_DIRECTORIES include)
 
 option(BUILD_LPC_ALL "Build all LPC device families" ON)
 option(BUILD_LPC17XX "Build Lpc17xx device family" OFF)
 option(BUILD_LPC40XX "Build Lpc40xx device family" OFF)
 
-sos_sdk_add_subdirectory(LPC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src)
+cmsdk_add_subdirectory(LPC_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 function(add_targets FAMILY MCU CHIP VARIANT VARIANT_DEFINE ARCH)
 
@@ -38,10 +24,11 @@ function(add_targets FAMILY MCU CHIP VARIANT VARIANT_DEFINE ARCH)
 	set(SOURCELIST ${LPC_SOURCES} ${VARIANT_HEADERS} ${LDSCRIPT_SOURCES} include/lpc_arch.h)
 	set(DEFINITIONS __${VARIANT} ${VARIANT_DEFINE}=1 MCU_ARCH_LPC)
 
-	sos_sdk_library_target(RELEASE StratifyOS ${MCU} release ${ARCH})
-	sos_sdk_library_target(DEBUG StratifyOS ${MCU} debug ${ARCH})
+	cmsdk_library_target(RELEASE StratifyOS ${MCU} release ${ARCH})
+	cmsdk_library_target(DEBUG StratifyOS ${MCU} debug ${ARCH})
 	add_library(${RELEASE_TARGET} STATIC)
 	target_compile_definitions(${RELEASE_TARGET} PUBLIC ${DEFINITIONS} )
+	target_compile_options(${RELEASE_TARGET} PRIVATE -Wno-address-of-packed-member)
 	target_sources(${RELEASE_TARGET} PRIVATE ${SOURCELIST})
 	target_include_directories(${RELEASE_TARGET}
 		PUBLIC
@@ -53,7 +40,7 @@ function(add_targets FAMILY MCU CHIP VARIANT VARIANT_DEFINE ARCH)
 
 	# create debug as a copy of release
 	add_library(${DEBUG_TARGET} STATIC)
-	sos_sdk_copy_target(${RELEASE_TARGET} ${DEBUG_TARGET})
+	cmsdk_copy_target(${RELEASE_TARGET} ${DEBUG_TARGET})
 
 	target_link_libraries(${RELEASE_TARGET}
 		PUBLIC
@@ -67,8 +54,8 @@ function(add_targets FAMILY MCU CHIP VARIANT VARIANT_DEFINE ARCH)
 
 
 	# Add SOS SDK build settings to targets
-	sos_sdk_library("${RELEASE_OPTIONS}")
-	sos_sdk_library("${DEBUG_OPTIONS}")
+	cmsdk_library("${RELEASE_OPTIONS}")
+	cmsdk_library("${DEBUG_OPTIONS}")
 endfunction()
 
 if(BUILD_LPC_ALL OR BUILD_LPC17XX)
